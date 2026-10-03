@@ -3,6 +3,7 @@ from datetime import datetime
 from app.database import Base,relationship
 from sqlalchemy_json import mutable_json_type
 from sqlalchemy import CheckConstraint
+from sqlalchemy import JSON
 
 class Admin(Base):
     __tablename__ = 'admins'
@@ -73,8 +74,8 @@ class TranscriptionEmbeddings(Base):
     text = Column(String, nullable=False)
 
     __table_args__ = (
-            CheckConstraint('NOT(session_id IS NULL AND batch_id IS NULL)', name="check_one_source"),
-        )
+            CheckConstraint('(session_id IS NULL != batch_id IS NULL)', name="check_one_source"),
+        ) # check if it works, create pytest
 
     session = relationship("RealTimeSession", backref="emb_rt")
     batch = relationship("BatchTranscription", backref="emb_batch")
