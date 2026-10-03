@@ -1,6 +1,8 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from datetime import datetime
 from app.database import Base,relationship
+from sqlalchemy_json import mutable_json_type
+from sqlalchemy import CheckConstraint
 
 class Admin(Base):
     __tablename__ = 'admins'
@@ -36,3 +38,43 @@ class WordDetectionLog(Base):
 
     wordD = relationship("IWord", backref="word_detections")
     user = relationship("User", backref="user_detections")
+
+class RealTimeSession(Base):
+    __tablename__ = "rt_session"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String, unique=True, nullable=False)
+    username = Column(String,ForeignKey("users.username"))
+    exp_date = Column(DateTime, default=datetime.now)
+    transcription = Column(mutable_json_type(dbtype=JSON, nested=True))
+
+    user = relationship("User", backref="user_session")
+
+class BatchTranscription(Base):
+    __tablename__ = "batch_transcription"
+
+    id = Column(Integer, primary_key = True, index=True)
+    batch_id = Column(String, unique=True, nullable=False)
+    context = Column(String, nullable=False)
+    username = Column(String,ForeignKey("users.username"))
+    transcription = Column(mutable_json_type(dbtype=JSON, nested=True))
+
+    user = relationship("User", backref="user_batch")
+
+class TranscriptionEmbeddings(Base):
+    __tablename__ = "trcpt_embedding"
+    
+    id = Column(Integer, primary_key = True, index=True)
+    session_id = Column(String, ForeignKey("rt_session.session_id"), nullable=True)
+    batch_id = Column(String, ForeignKey("batch_transcription.batch_id"), nullable=True)
+    embedding = Column(String,nullable=False)
+    start_time = Column(Integer,nullable=False)
+    end_time = Column(Integer, nullable=False)
+    text = Column(String, nullable=False)
+
+    __table_args__ = (
+            CheckConstraint('NOT(session_id IS NULL AND batch_id IS NULL)', name="check_one_source"),
+        )
+
+    session = relationship("RealTimeSession", backref="emb_rt")
+    batch = relationship("BatchTranscription", backref="emb_batch")
