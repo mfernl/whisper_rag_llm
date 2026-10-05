@@ -1,6 +1,6 @@
 import pytest
-from app.models import User, Admin, IWord
-from app.database import Base, engine, SessionLocal, RealTimeSession, BatchTranscription, TranscriptionEmbeddings
+from app.models import User, RealTimeSession, BatchTranscription, TranscriptionEmbeddings
+from app.database import Base, engine, SessionLocal
 from app.security import hash_password
 
 from sqlalchemy.exc import IntegrityError
@@ -21,12 +21,12 @@ def db_session():
 
 @pytest.fixture(scope="module")
 def rt():
-    rtses = RealTimeSession(session_id = "articuno#12", username = session.query(User).filter_by(username="articuno").first())
+    rtses = RealTimeSession(session_id = "articuno#12", username = "articuno")
     return rtses
 
 @pytest.fixture(scope="module")
 def btch():
-    batch = BatchTranscription(batch_id = "articuno#B1", context = "batch prueba", username = session.query(User).filter_by(username="articuno").first())
+    batch = BatchTranscription(batch_id = "articuno#B1", context = "batch prueba", username = "articuno")
     return batch
 
         
