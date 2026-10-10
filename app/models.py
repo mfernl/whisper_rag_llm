@@ -74,8 +74,8 @@ class TranscriptionEmbeddings(Base):
     text = Column(String, nullable=False)
 
     __table_args__ = (
-            CheckConstraint('(session_id IS NULL != batch_id IS NULL)', name="check_one_source"),
-        ) # check if it works, create pytest
+            CheckConstraint('(session_id IS NULL) != (batch_id IS NULL)', name="check_one_source"),
+        )
 
     session = relationship("RealTimeSession", backref="emb_rt")
     batch = relationship("BatchTranscription", backref="emb_batch")
