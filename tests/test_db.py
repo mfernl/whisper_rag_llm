@@ -106,3 +106,14 @@ class TestDatabase:
         db_session.commit()                 # si falla, el test falla
         assert db_session.query(TranscriptionEmbeddings).count() == 1
 
+    def test_rt_session_usuario_inexistente(self, db_session):                                                     
+        rtses = RealTimeSession(                                                                                 
+            session_id = "rt.session_id",                                                                                              
+            username = "manolo"                                                                              
+        )                                                                                                                                        
+        db_session.add(rtses)                                                                                                                        
+        #with pytest.raises(IntegrityError) as excinfo:                                                    
+        db_session.commit()                                                                                                                 
+        #print(excinfo.value)
+        db_session.rollback()
+

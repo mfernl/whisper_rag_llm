@@ -23,7 +23,6 @@ import psutil
 import asyncio
 from queue import Queue
 from threading import Thread
-import multiprocessing
 import atexit
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
@@ -73,27 +72,24 @@ Base.metadata.create_all(bind=engine)
 async def lifespan(app: FastAPI):
     db = SessionLocal()
     load_iwords(db)
-    existingAdmin = db.query(Admin).filter_by(username = "admin").first()
+    existingAdmin = db.query(Admin).filter_by(username = ADMIN_USERNAME).first()
     if not existingAdmin:
         new_admin = Admin(username = ADMIN_USERNAME, password = hash_password(ADMIN_PASSWORD))
         db.add(new_admin)
         db.commit()
         db.close()
-    existingUser = db.query(User).filter_by(username = "articuno").first()
+    existingUser = db.query(User).filter_by(username = USER_USERNAME).first()
     if not existingUser:
         new_user = User(username = USER_USERNAME, password = hash_password(USER_PASSWORD))
         db.add(new_user)
         db.commit()
         db.close()
     yield
-    semaphore.release()  # Libera el recurso
-    print("Semáforo liberado.")
+    db.close()
     print("Cierre de API completado.")
 
 
 app = FastAPI(docs_url=None, redoc_url=None, lifespan=lifespan)
-
-semaphore = multiprocessing.Semaphore(1)
 
 def load_iwords(db:Session):
     global IWORDS_CACHE

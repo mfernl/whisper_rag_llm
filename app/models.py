@@ -23,7 +23,7 @@ class IWord(Base):
     word = Column(String,unique=True,nullable=False)
     count = Column(Integer, default=0)
     lastDetectedAt = Column(DateTime,default=datetime.now)
-    lastDetectedBy = Column(Integer,ForeignKey("users.username"),default=0)
+    lastDetectedBy = Column(String,ForeignKey("users.username"),default=0)
     transcriptionType = Column(String,default="upload")
 
     user = relationship("User", backref="last_detection")
