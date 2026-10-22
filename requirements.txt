@@ -10,3 +10,5 @@ jiwer
 sqlalchemy
 bcrypt
 openai-whisper
+psycopg[binary]
+sqlalchemy_json

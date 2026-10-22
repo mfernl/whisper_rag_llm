@@ -1,29 +1,20 @@
-from fastapi import FastAPI, UploadFile, HTTPException, Form
-from fastapi import WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.staticfiles import StaticFiles
 import os
 from pydub import AudioSegment
-from io import BytesIO
-import wave
-from collections import namedtuple
 import random
-import shutil
-import uuid
 import subprocess
 import io
 from io import StringIO
 import torch
 from datetime import datetime,timedelta, timezone
-import time
 import whisper
 import warnings
-from jose import jwt, JWTError
+from jose import jwt
 import psutil
 import asyncio
 from queue import Queue
 from threading import Thread
-import atexit
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from app.database import get_db, Base, engine, SessionLocal
