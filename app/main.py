@@ -40,7 +40,7 @@ TIME_SPENT_TRANSCRIPTING = timedelta()
 
 DEVICE = "cpu"
 
-MODEL = whisper.load_model(LOAD_MODEL, device=DEVICE, download_root= "/user_home/user_cache/whisper")
+MODEL = whisper.load_model(LOAD_MODEL, device=DEVICE, download_root= "/user_home/.cache/whisper")
 IWORDS_CACHE = []
 IWORDS_LOCK = threading.Lock()
 
@@ -57,7 +57,13 @@ sesiones = {}
 
 transcription_queue = Queue() #cola para manejar todas las peticiones
 
-Base.metadata.create_all(bind=engine)
+# asegurarse que pgvector esta incluido como extension en la postgres
+
+#with engine.connect() as conn:
+#    conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+#    conn.commit()
+
+#Base.metadata.create_all(bind=engine)
 
 @asynccontextmanager #al iniciar la aplicación se ejecuta hasta yield, y justo antes de cerrar se ejecuta el resto
 async def lifespan(app: FastAPI):

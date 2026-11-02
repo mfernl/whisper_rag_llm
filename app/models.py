@@ -1,9 +1,11 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from datetime import datetime
-from app.database import Base,relationship
+from app.database import Base
+from sqlalchemy.orm import relationship
 from sqlalchemy_json import mutable_json_type
 from sqlalchemy import CheckConstraint
 from sqlalchemy import JSON
+from pgvector.sqlalchemy import Vector
 
 class Admin(Base):
     __tablename__ = 'admins'
@@ -68,7 +70,7 @@ class TranscriptionEmbeddings(Base):
     id = Column(Integer, primary_key = True, index=True)
     session_id = Column(String, ForeignKey("rt_session.session_id"), nullable=True)
     batch_id = Column(String, ForeignKey("batch_transcription.batch_id"), nullable=True)
-    embedding = Column(String,nullable=False)
+    embedding = Column(Vector(384),nullable=False)
     start_time = Column(Integer,nullable=False)
     end_time = Column(Integer, nullable=False)
     text = Column(String, nullable=False)

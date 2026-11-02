@@ -39,7 +39,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 USER appuser
 
-RUN mkdir -p /user_home/user_cache/whisper
+RUN mkdir -p /user_home/.cache/whisper
 
 COPY . .
 
