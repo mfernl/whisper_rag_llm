@@ -16,7 +16,7 @@ services:
       - 8000:8000
     container_name: whisper_rag_service
     volumes: 
-      - .:/app #bind mount to my app folder
+      - .:/app #bind mount to my app folder, allows changes in the files to synchronize with docker and reload the service using --reload
       - whisper-cache:/user_home/.cache/whisper
     command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
     deploy:
