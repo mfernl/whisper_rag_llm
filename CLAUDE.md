@@ -1,7 +1,7 @@
 # CLAUDE.md — whisper_rag_llm
 
 > Claude Code carga este archivo al empezar cada sesión. Explica **cómo trabajamos** y **por dónde seguir**.
-> Última actualización: 2026-11-12.
+> Última actualización: 2026-11-14.
 
 ---
 
@@ -12,7 +12,7 @@
 - **No dar la solución completa.** Dar pistas, preguntas guía, esqueletos con huecos (`TODO`) y criterios para comprobar el resultado. Si Marco pide "hazme X", darle un esqueleto con pistas.
 - Diagnosticar a partir del código y la salida que pegue Marco, y señalarle dónde tiene que mirar.
 - Las APIs de LangChain, LangGraph y RAGAS cambian rápido: **consultar la documentación actual** antes de guiarle en esas fases.
-- Entorno: Windows, **cmd.exe**, venv en `.venv`, Python 3.10.11. El Dockerfile usa `python:3.11-slim-bookworm`.
+- Entorno: Windows, **cmd.exe**, venv en `.venv`, Python 3.10.11. El Dockerfile usa `python:3.11-slim-bookworm`. **Decidido (2026-11-14): recrear el `.venv` con Python 3.11** (la versión oficial es la del Dockerfile; ver `specs/constitution.md`).
 
 ### Citar siempre las fuentes (petición explícita de Marco)
 - Toda afirmación sobre **cómo funciona SDD** (o cualquier técnica o herramienta) tiene que llevar la **fuente con enlace**.
@@ -69,6 +69,14 @@
 ### 3.4 Pasos de la migración (en orden)
 - [x] 0. Crear este `CLAUDE.md`.
 - [ ] 1. Crear `specs/constitution.md` (lo escribe Marco con preguntas guía de Claude): stack, convenciones, puertas de calidad (tests en verde, migración revisada, etc.) y reglas de commits.
+  **En curso (2026-11-14).** Hechas las secciones 1 (stack), 2 (restricciones), 3 (puertas de calidad) y casi toda la 4 (convenciones). Falta:
+  - §3: la última línea («si ambas funcionan») se solapa con «toda la suite en verde». ¿Se reescribe para exigir solo que la otra spec quede actualizada?
+  - §4: ¿las specs y la documentación también en inglés? Y aceptar o cambiar la estructura de `specs/`.
+  - §1: proveedor del LLM (API) y versiones de las librerías (TODO en la tabla). ¿Van en la constitución o en `requirements.txt`?
+  - §5 (seguridad y datos): filtrar todo acceso por usuario (duda de `notas.txt`), dónde va la API key del LLM.
+  - §6 (gobernanza): cómo se cambia la constitución.
+  - Riesgo abierto: medir si torch + Whisper tiny + MiniLM caben en 512 MB (proponer como una de las primeras tareas de la Fase 3).
+  - Para el `tasks.md` de la Fase 2: el fixture de testcontainers tiene que fallar, no saltar, si no hay Docker.
 - [ ] 2. Crear `specs/000-vision.md`: objetivo, alcance y lo que queda fuera (fine-tuning, diarización). Sacarlo de `instrucciones.txt`.
 - [ ] 3. Crear `specs/001-modelo-datos/spec.md`, retroactiva. Ejemplo de criterio EARS: *"SI se intenta guardar un embedding con `session_id` y `batch_id` a la vez, o sin ninguno, ENTONCES el sistema DEBERÁ rechazarlo"* → `test_embedding_two_transcriptions` y `test_embedding_no_transcriptions`.
 - [ ] 4. Crear `specs/002-postgres-pgvector/spec.md` y `tasks.md`, con los pendientes de la sección 2 como tareas.
