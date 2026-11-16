@@ -31,11 +31,12 @@ Each part is labelled **[current]** (already in the code), **[decided]** (agreed
                                                          └─ temp file deleted
 ```
 - [current] Result returned to the caller; nothing is stored in the database.
-- [decided] Store the result in `batch_transcription` with the owner's `username` and a `context` label (see `notas.txt`).
+- [decided] Store the result in `batch_transcription` with the owner's `username`, a `context` label (see `notas.txt`) and the **date and time the request was received**.
 
 **Real-time** — `/crearRTsession` → `/broadcast` (chunks) → `/cerrarRTsession`
 - [current] Partial transcriptions are kept in an in-memory dict (`sesiones`) and are lost on restart.
-- [decided] On close, the full transcription is persisted in `rt_session` with the owner's `username`.
+- [decided] On close, the full transcription is persisted in `rt_session` with the owner's `username` and the **date and time the session started**. The session keeps **each transcription request separately**, with the date and time it was received and its own text.
+- Open design question for the Phase 4 spec: store the requests as a JSON list inside `rt_session.transcription`, or as rows of a new table linked to the session.
 
 ---
 

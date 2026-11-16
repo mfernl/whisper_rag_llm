@@ -78,7 +78,8 @@
   - §6 (gobernanza): cómo se cambia la constitución.
   - Riesgo abierto: medir si torch + Whisper tiny + MiniLM caben en 512 MB (proponer como una de las primeras tareas de la Fase 3).
   - Para el `tasks.md` de la Fase 2: el fixture de testcontainers tiene que fallar, no saltar, si no hay Docker.
-- [ ] 2. Create `specs/000-vision.md`: goal, scope, non-goals. **In progress (2026-11-16):** skeleton + Marco's first draft; §6 roadmap filled. Pending: review §1-§5 with Marco (questions 1-15 of the review).
+- [x] 2. Create `specs/000-vision.md`: goal, scope, non-goals. **Done 2026-11-16.** Problem/Solution split, goals, non-goals, success criteria, 9-phase roadmap (storage of transcriptions goes at the start of Phase 4). Risks to check in Phases 8-9 specs: Render free tier may not offer background workers, free Postgres has a limited lifetime, and Render doesn't run Docker Compose (Blueprint `render.yaml`).
+  - Decided 2026-11-16 (for the Phase 4 spec, NOT implemented yet): `batch_transcription` gets the date+time the request was received; `rt_session` gets its start date+time and stores each transcription request separately (received date+time + text). Open: JSON list vs separate table; timestamptz in UTC vs formatted strings; how embedding `start_time`/`end_time` relate to request times.
 - [ ] 3. Create `specs/001-data-model/spec.md`, retroactive. Ejemplo de criterio EARS: *"SI se intenta guardar un embedding con `session_id` y `batch_id` a la vez, o sin ninguno, ENTONCES el sistema DEBERÁ rechazarlo"* → `test_embedding_two_transcriptions` y `test_embedding_no_transcriptions`.
 - [ ] 4. Crear `specs/002-postgres-pgvector/spec.md` y `tasks.md`, con los pendientes de la sección 2 como tareas.
 - [ ] 5. Turn `razonamiento.md` into an ADR in `docs/decisions/` (next number after 0001) and decide what to do with `instrucciones.txt` (move what is still valid into `specs/`).
