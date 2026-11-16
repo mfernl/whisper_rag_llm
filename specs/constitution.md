@@ -1,19 +1,21 @@
 # Constitution — whisper_rag_llm
-Version: 1.0.0 · Date: 2026-11-16
+Version: 1.1.0 · Date: 2026-11-16
 
 ## 1. Fixed stack
 Changing any of these elements requires opening a decision record (ADR) in `docs/decisions/`.
 
 | Layer | Technology | Version |
 |---|---|---|
-| Language | Python | 3.11 (the one in the `Dockerfile`) |
-| API | FastAPI + Uvicorn | TODO |
+| Language | Python | 3.11 (`python:3.11-slim-bookworm`; image currently 3.11.18) |
+| API | FastAPI + Uvicorn | FastAPI 0.162.0 · Uvicorn 0.54.0 |
 | Persistence | PostgreSQL + pgvector (image `pgvector/pgvector:0.8.7-pg18-bookworm`) | pgvector 0.8.7 · PostgreSQL 18 |
-| ORM and migrations | SQLAlchemy + Alembic + psycopg | TODO |
-| Transcription | openai-whisper (`tiny` model) + torch (CPU) | TODO |
-| Embeddings | sentence-transformers with `all-MiniLM-L6-v2` (dimension 384 → `Vector(384)` column) | TODO |
-| Authentication | python-jose + bcrypt | TODO |
+| ORM and migrations | SQLAlchemy + Alembic + psycopg + pgvector (Python package) | SQLAlchemy 2.1.6 · Alembic 1.20.1 · psycopg 3.3.6 · pgvector 0.5.1 |
+| Transcription | openai-whisper (`tiny` model) + torch (CPU) | openai-whisper 20250625 · torch 2.15.0 (CPU build) |
+| Embeddings | sentence-transformers with `all-MiniLM-L6-v2` (dimension 384 → `Vector(384)` column) | TODO: pin when added in Phase 3 |
+| Authentication | python-jose + bcrypt | python-jose 3.5.0 · bcrypt 5.0.0 |
 | Packaging | Docker + Docker Compose | — |
+
+Exact versions are pinned in `requirements.txt` (and torch also in the `Dockerfile`). This table and those files must always match.
 
 **LLM (Phases 4 and 5):** called through an external API. Provider and model version: TODO — to be decided after research, and recorded in this table once chosen.
 

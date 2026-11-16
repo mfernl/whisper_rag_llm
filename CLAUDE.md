@@ -69,7 +69,7 @@
 
 ### 3.4 Pasos de la migración (en orden)
 - [x] 0. Crear este `CLAUDE.md`.
-- [x] 1. Crear `specs/constitution.md` — **done 2026-11-16, v1.0.0** (pending only §1 TODOs: library versions and LLM provider, to be added as MINOR amendments). (lo escribe Marco con preguntas guía de Claude): stack, convenciones, puertas de calidad (tests en verde, migración revisada, etc.) y reglas de commits.
+- [x] 1. Crear `specs/constitution.md` — **done 2026-11-16, v1.0.0** v1.1.0 adds pinned stack versions (from the image, 2026-11-16; also pinned in `requirements.txt` and torch in the `Dockerfile`). Still TODO in §1: sentence-transformers (Phase 3) and LLM provider. Note: the local `.venv` (3.10.11) has different versions (e.g. FastAPI 0.142.2, SQLAlchemy 2.0.54) → recreate it with 3.11 from the pinned `requirements.txt`. (lo escribe Marco con preguntas guía de Claude): stack, convenciones, puertas de calidad (tests en verde, migración revisada, etc.) y reglas de commits.
   **En curso (2026-11-16).** v0.2, traducida al inglés. §1-§4 cerradas (decidido el 16-11: §3 solo exige actualizar la otra spec; todo en inglés desde el 16-11, incluidas specs y docs; estructura `specs/NNN-name/` aceptada; proveedor y versión del LLM se fijarán en la constitución cuando Marco investigue). `chuleta`, `razonamiento.md` y `requirements_copia.txt` añadidos a `.gitignore`. Falta:
   - §1: versiones de las librerías (TODO en la tabla) y LLM.
   - §5: done 2026-11-16 (Marco's answers + suggestions A-E accepted). Code that violates it, to become Phase 2 tasks: `"soyadmin"` bypass (`app/main.py:138`), `verify_exp: False` (`:143`), JWT payload printed (`:144`), admin credentials as query params in `/register` (`:480`).
