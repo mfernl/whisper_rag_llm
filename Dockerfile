@@ -30,7 +30,7 @@ RUN adduser \
 RUN chown -R appuser:appuser /app
 
 # No cpu-torch
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
 
 # Create cache to not re-download all the requirements
 RUN --mount=type=cache,target=/root/.cache/pip \

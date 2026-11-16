@@ -1,16 +1,18 @@
-fastapi
-uvicorn
-python-multipart
-websockets
-pydub
-psutil
-python-jose[cryptography]
-torch
-jiwer
-sqlalchemy
-bcrypt
-openai-whisper
-psycopg[binary]
-sqlalchemy_json
-pgvector
-alembic
+# Direct dependencies, pinned to the versions in the whisper_rag_compose image (2026-11-16).
+# Keep in sync with specs/constitution.md §1 (changing a version there is a constitution amendment).
+fastapi==0.162.0
+uvicorn==0.54.0
+python-multipart==0.0.33
+pydub==0.25.1
+psutil==7.2.2
+python-jose[cryptography]==3.5.0
+# CPU build is installed first by the Dockerfile from the PyTorch CPU index; keep both pins equal.
+torch==2.15.0
+jiwer==4.0.0
+sqlalchemy==2.1.6
+bcrypt==5.0.0
+openai-whisper==20250625
+psycopg[binary]==3.3.6
+sqlalchemy_json==0.7.0
+pgvector==0.5.1
+alembic==1.20.1
