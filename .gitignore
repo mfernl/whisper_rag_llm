@@ -26,3 +26,9 @@ temp_audio_RT/
 Thumbs.db
 .vscode/
 .idea/
+
+# Miscelanea
+instrucciones.txt
+chuleta_comandos_rag_llm.md
+razonamiento.md
+requirements_copia.txt
