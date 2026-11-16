@@ -1,46 +1,62 @@
-# Constitución — whisper_rag_llm
-Versión: 0.1 · Fecha: 2026-11-14
+# Constitution — whisper_rag_llm
+Version: 1.0.0 · Date: 2026-11-16
 
-## 1. Stack fijo
-Cambiar cualquiera de estos elementos requiere abrir una decisión (ADR) en `docs/decisiones/`.
+## 1. Fixed stack
+Changing any of these elements requires opening a decision record (ADR) in `docs/decisions/`.
 
-| Capa | Tecnología | Versión |
+| Layer | Technology | Version |
 |---|---|---|
-| Lenguaje | Python | 3.11 (la del `Dockerfile`) |
+| Language | Python | 3.11 (the one in the `Dockerfile`) |
 | API | FastAPI + Uvicorn | TODO |
-| Persistencia | PostgreSQL + pgvector (imagen `pgvector/pgvector:0.8.7-pg18-bookworm`) | pgvector 0.8.7 · PostgreSQL 18 |
-| ORM y migraciones | SQLAlchemy + Alembic + psycopg | TODO |
-| Transcripción | openai-whisper (modelo `tiny`) + torch (CPU) | TODO |
-| Embeddings | sentence-transformers con `all-MiniLM-L6-v2` (dimensión 384 → columna `Vector(384)`) | TODO |
-| Autenticación | python-jose + bcrypt | TODO |
-| Empaquetado | Docker + Docker Compose | — |
+| Persistence | PostgreSQL + pgvector (image `pgvector/pgvector:0.8.7-pg18-bookworm`) | pgvector 0.8.7 · PostgreSQL 18 |
+| ORM and migrations | SQLAlchemy + Alembic + psycopg | TODO |
+| Transcription | openai-whisper (`tiny` model) + torch (CPU) | TODO |
+| Embeddings | sentence-transformers with `all-MiniLM-L6-v2` (dimension 384 → `Vector(384)` column) | TODO |
+| Authentication | python-jose + bcrypt | TODO |
+| Packaging | Docker + Docker Compose | — |
 
-**LLM (Fases 4 y 5):** llamada a una API externa. Proveedor: TODO.
+**LLM (Phases 4 and 5):** called through an external API. Provider and model version: TODO — to be decided after research, and recorded in this table once chosen.
 
-## 2. Restricciones
-- Despliegue en Render, tier gratis: 512 MB de RAM. Hay acceso a internet.
-- Los embeddings se generan con el modelo cargado en la memoria del servicio en Render.
-- Riesgo conocido: no se ha medido si torch + Whisper tiny + MiniLM caben en 512 MB. Queda abierto qué hacer si no caben; se decide cuando se mida.
+## 2. Constraints
+- Deployment on Render, free tier: 512 MB of RAM. Internet access is available.
+- Embeddings are generated with the model loaded in the memory of the Render service.
+- Known risk: it has not been measured whether torch + Whisper tiny + MiniLM fit in 512 MB. What to do if they don't is left open; it will be decided once measured.
 
-## 3. Puertas de calidad (Definition of Done)
-- Una tarea está terminada cuando sus tests y los de toda la suite están en verde.
-  - Un test saltado (`skip`) cuenta como verde solo si lleva motivo (se revisan con `pytest -rs`).
-  - Si los tests de integración no se ejecutan por falta de Docker, la suite NO cuenta como verde.
-- Cada criterio de aceptación (EARS) tiene al menos un test que lo comprueba.
-- Se trabaja en ciclos de TDD (rojo → verde → refactorizar), empezando por los tests de cada criterio EARS. Más allá de esos tests, el desarrollador decide cuándo dejar de iterar.
-- Los tests de integración se ejecutan con pytest + testcontainers-python, en local, con Python 3.11 y la imagen `pgvector/pgvector:0.8.7-pg18-bookworm`.
-- Cada migración de Alembic se revisa a mano antes de commitearla.
-- Una tarea que modifica otra spec solo queda terminada si ambas funcionan después de actualizarse lo necesario.
+## 3. Quality gates (Definition of Done)
+- A task is done when its tests and the whole suite are green.
+  - A skipped test counts as green only if it carries a reason (reviewed with `pytest -rs`).
+  - If the integration tests do not run because Docker is unavailable, the suite does NOT count as green.
+- Every acceptance criterion (EARS) has at least one test that checks it.
+- Work follows TDD cycles (red → green → refactor), starting with the tests for each EARS criterion. Beyond those tests, the developer decides when to stop iterating.
+- Integration tests run with pytest + testcontainers-python, locally, with Python 3.11 and the image `pgvector/pgvector:0.8.7-pg18-bookworm`.
+- Every Alembic migration is reviewed by hand before it is committed.
+- A task that changes the behaviour described in another spec is done only when that other spec has been updated to match.
 
-## 4. Convenciones de trabajo
-- Un commit por tarea.
-- Mensajes de commit con [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/) (`feat:`, `fix:`, `test:`, `docs:`…).
-- Idioma: todo en inglés (commits y código). PENDIENTE: ¿también las specs y la documentación, que hoy están en español?
-- Ramas: una rama por tarea, a partir de cuando el flujo SDD esté formalizado (pasos 1-5 de `CLAUDE.md` §3.4). Hasta entonces, commits directos en `main`.
-- TODO: estructura de `specs/` (propuesta en `CLAUDE.md`: `specs/NNN-nombre/{spec.md, plan.md, tasks.md}`).
+## 4. Working conventions
+- One commit per task.
+- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) (`feat:`, `fix:`, `test:`, `docs:`…).
+- Language: everything in English (code, commits, specs and documentation) from 2026-11-16 on.
+- Branches: one branch per task, once the SDD workflow is formalised (steps 1-5 of `CLAUDE.md` §3.4). Until then, direct commits to `main`.
+- Specs structure: `specs/constitution.md`, `specs/000-vision.md` and one folder per feature or phase: `specs/NNN-name/{spec.md, plan.md, tasks.md}`. Decision records go in `docs/decisions/`.
 
-## 5. Principios de seguridad y datos
-TODO
+## 5. Security and data principles
+- **Ownership.** Each user can only access the data they created: real-time sessions, batch transcriptions and the embeddings derived from them. Ownership is determined by the `username` of the session or batch the data belongs to. Admins can access everything.
+- **Retrieval isolation.** Vector search is restricted to the requesting user's data *before* ranking, so other users' chunks can never reach the top-k results or the LLM prompt.
+- **Secrets.** Passwords, keys and other secrets are read from environment variables (a `.env` file locally). They must never appear in git or in logs.
+- **Credentials.** User and admin passwords are stored only as bcrypt hashes. Credentials and tokens never travel in URLs or query strings.
+- **Tokens.** Every access token has an expiry date and it is always verified. There are no hard-coded tokens or authentication bypasses.
+- **Third parties.** Only text (retrieved transcript chunks and the user's question) is sent to the external LLM provider. Audio and embeddings never leave the server. This is stated in the README and in the description of every endpoint that calls the LLM.
+- **Persistence.** When a real-time session is closed, its full transcription is stored in the database.
+- **Retention.** Transcriptions and their embeddings are kept in the database. Users cannot delete them; deletion is not a feature.
+- **Upload limits.** Every audio upload is restricted by format (only `.wav`), maximum size per request and maximum amount of audio per user. The limits are stated in the endpoint description; their values are defined in the feature specs, not here.
+- **Limit errors.** Exceeding a limit returns a clear error: 413 for size, 429 or 403 for quota (exact code chosen in the feature spec), and nothing is stored.
+- See `docs/architecture.md` §6 for what data leaves the server.
 
-## 6. Gobernanza
-TODO: cómo se cambia esta constitución
+## 6. Governance
+- **Precedence.** This constitution overrides every spec, plan and task. If a spec contradicts it, the spec is wrong: either the spec is fixed, or the constitution is amended first through this section. There are no silent exceptions.
+- **Versioning.** The version follows semantic versioning:
+  - MAJOR: a rule is removed or redefined in a way that can make existing specs non-compliant.
+  - MINOR: a rule or section is added, or an existing one is materially expanded (e.g. filling a TODO in §1).
+  - PATCH: wording, typos or clarifications that do not change meaning.
+- **Process.** Every amendment goes in its own `docs:` commit that updates the version and date at the top of this file. A MAJOR amendment also needs a decision record in `docs/decisions/` explaining why.
+- **Ripple effect.** An amendment is done only when every affected spec has been updated to comply, in the same change.

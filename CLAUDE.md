@@ -8,7 +8,8 @@
 ## 1. Cómo tiene que trabajar Claude en este proyecto
 
 ### Mentoría (reglas heredadas de `instrucciones.txt`)
-- Responder **en español**, paso a paso.
+- **Everything in English (decided 2026-11-16)**: conversations, code, commits, specs and docs. Answer step by step.
+- **English practice**: point out Marco's *big* grammar or spelling mistakes (briefly, at the start of the reply, with the corrected phrase). Ignore small slips.
 - **No dar la solución completa.** Dar pistas, preguntas guía, esqueletos con huecos (`TODO`) y criterios para comprobar el resultado. Si Marco pide "hazme X", darle un esqueleto con pistas.
 - Diagnosticar a partir del código y la salida que pegue Marco, y señalarle dónde tiene que mirar.
 - Las APIs de LangChain, LangGraph y RAGAS cambian rápido: **consultar la documentación actual** antes de guiarle en esas fases.
@@ -68,12 +69,12 @@
 
 ### 3.4 Pasos de la migración (en orden)
 - [x] 0. Crear este `CLAUDE.md`.
-- [ ] 1. Crear `specs/constitution.md` (lo escribe Marco con preguntas guía de Claude): stack, convenciones, puertas de calidad (tests en verde, migración revisada, etc.) y reglas de commits.
-  **En curso (2026-11-14).** Hechas las secciones 1 (stack), 2 (restricciones), 3 (puertas de calidad) y casi toda la 4 (convenciones). Falta:
-  - §3: la última línea («si ambas funcionan») se solapa con «toda la suite en verde». ¿Se reescribe para exigir solo que la otra spec quede actualizada?
-  - §4: ¿las specs y la documentación también en inglés? Y aceptar o cambiar la estructura de `specs/`.
-  - §1: proveedor del LLM (API) y versiones de las librerías (TODO en la tabla). ¿Van en la constitución o en `requirements.txt`?
-  - §5 (seguridad y datos): filtrar todo acceso por usuario (duda de `notas.txt`), dónde va la API key del LLM.
+- [x] 1. Crear `specs/constitution.md` — **done 2026-11-16, v1.0.0** (pending only §1 TODOs: library versions and LLM provider, to be added as MINOR amendments). (lo escribe Marco con preguntas guía de Claude): stack, convenciones, puertas de calidad (tests en verde, migración revisada, etc.) y reglas de commits.
+  **En curso (2026-11-16).** v0.2, traducida al inglés. §1-§4 cerradas (decidido el 16-11: §3 solo exige actualizar la otra spec; todo en inglés desde el 16-11, incluidas specs y docs; estructura `specs/NNN-name/` aceptada; proveedor y versión del LLM se fijarán en la constitución cuando Marco investigue). `chuleta`, `razonamiento.md` y `requirements_copia.txt` añadidos a `.gitignore`. Falta:
+  - §1: versiones de las librerías (TODO en la tabla) y LLM.
+  - §5: done 2026-11-16 (Marco's answers + suggestions A-E accepted). Code that violates it, to become Phase 2 tasks: `"soyadmin"` bypass (`app/main.py:138`), `verify_exp: False` (`:143`), JWT payload printed (`:144`), admin credentials as query params in `/register` (`:480`).
+  - §5 Retention changed: users cannot delete transcriptions (not a feature). §6 done: semantic versioning, own `docs:` commit + ADR if MAJOR, affected specs updated in the same change, constitution wins.
+  - Created `docs/architecture.md` (pipelines, components, what leaves the server). Keep it updated with each phase.
   - §6 (gobernanza): cómo se cambia la constitución.
   - Riesgo abierto: medir si torch + Whisper tiny + MiniLM caben en 512 MB (proponer como una de las primeras tareas de la Fase 3).
   - Para el `tasks.md` de la Fase 2: el fixture de testcontainers tiene que fallar, no saltar, si no hay Docker.
