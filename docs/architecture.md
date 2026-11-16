@@ -13,13 +13,13 @@ Each part is labelled **[current]** (already in the code), **[decided]** (agreed
 
 | Component | Role | Status |
 |---|---|---|
-| API (FastAPI + Uvicorn) | Auth, upload/real-time endpoints, `/ask` | [current] / `/ask` [planned, Phase 4] |
+| API (FastAPI + Uvicorn) | Auth, upload/real-time endpoints, `/ask` | [current] / `/ask` [planned, Phase 5] |
 | Whisper `tiny` (in-process, CPU) | Audio → text with timestamps | [current] |
-| MiniLM `all-MiniLM-L6-v2` (in-process) | Text → 384-dim vector | [planned, Phase 3] |
+| MiniLM `all-MiniLM-L6-v2` (in-process) | Text → 384-dim vector | [planned, Phase 4] |
 | PostgreSQL + pgvector | Users, transcriptions, chunks and their vectors | [current] schema · data writes [decided] |
-| External LLM (API) | Writes the answer from the retrieved text | [planned, Phase 4] |
-| LangGraph agent | Picks between vector search and metadata (SQL) queries | [planned, Phase 5] |
-| Worker | Moves transcription/ingestion off the request path | [planned, Phase 7] |
+| External LLM (API) | Writes the answer from the retrieved text | [planned, Phase 5] |
+| LangGraph agent | Picks between vector search and metadata (SQL) queries | [planned, Phase 6] |
+| Worker | Moves transcription/ingestion off the request path | [planned, Phase 8] |
 
 ---
 
@@ -39,7 +39,7 @@ Each part is labelled **[current]** (already in the code), **[decided]** (agreed
 
 ---
 
-## 3. Ingestion pipeline (Phase 3) [planned]
+## 3. Ingestion pipeline (Phase 4) [planned]
 Runs once per stored transcription.
 ```
 transcription (JSON with segments + timestamps)
@@ -53,7 +53,7 @@ transcription (JSON with segments + timestamps)
 
 ---
 
-## 4. Question pipeline — `/ask` (Phase 4) [planned]
+## 4. Question pipeline — `/ask` (Phase 5) [planned]
 Runs on every question. This is RAG: a retriever selects relevant passages and only those go to the generator ([Lewis et al., 2020](https://arxiv.org/abs/2005.11401)).
 ```
 question
@@ -69,7 +69,7 @@ question
 
 ---
 
-## 5. Agent (Phase 5) [planned]
+## 5. Agent (Phase 6) [planned]
 A LangGraph agent wraps the question pipeline as tools:
 - `buscar_en_transcripcion`: the vector search from section 4.
 - `consultar_metadatos`: SQL over transcription metadata (dates, context labels…).

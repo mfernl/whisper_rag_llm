@@ -35,7 +35,7 @@
   2. Con una BD vacía (después de `down -v`), ¿quién crea la extensión `vector`? ¿La crea la migración?
   3. ¿Siguen pasando los tests en SQLite ahora que hay una columna `Vector`? ¿Habría que ejecutarlos contra Postgres?
   4. Sin commitear: el cambio de `.gitignore`, `chuleta_comandos_rag_llm.md`, `razonamiento.md` y `requirements_copia.txt` (¿se commitea o se borra?).
-- **Fases que quedan** (objetivo completo en `instrucciones.txt`): 3 ingesta (chunking por ventanas de tiempo + sentence-transformers), 4 endpoint `/ask` con citas, 5 agente LangGraph (herramientas `buscar_en_transcripcion` y `consultar_metadatos`), 6 evaluación RAGAS, 7 worker y compose multiservicio, 8 README/CI.
+- **Remaining phases** (reordered 2026-11-16, see `specs/000-vision.md` §6): 3 CI (GitHub Actions + `requirements-dev.txt` + exclude GPU tests), 4 ingestion (time-window chunking + sentence-transformers), 5 `/ask` endpoint with citations, 6 LangGraph agent (tools `buscar_en_transcripcion` and `consultar_metadatos`), 7 RAGAS evaluation, 8 worker + multi-service compose, 9 README + CD to Render.
 
 ---
 
@@ -69,7 +69,7 @@
 
 ### 3.4 Pasos de la migración (en orden)
 - [x] 0. Crear este `CLAUDE.md`.
-- [x] 1. Crear `specs/constitution.md` — **done 2026-11-16, v1.0.0** v1.1.0 adds pinned stack versions (from the image, 2026-11-16; also pinned in `requirements.txt` and torch in the `Dockerfile`). Still TODO in §1: sentence-transformers (Phase 3) and LLM provider. Note: the local `.venv` (3.10.11) has different versions (e.g. FastAPI 0.142.2, SQLAlchemy 2.0.54) → recreate it with 3.11 from the pinned `requirements.txt`. (lo escribe Marco con preguntas guía de Claude): stack, convenciones, puertas de calidad (tests en verde, migración revisada, etc.) y reglas de commits.
+- [x] 1. Create `specs/constitution.md` (written by Marco with guiding questions from Claude). **Done 2026-11-16.** v1.0.0 adopted; v1.1.0 adds pinned stack versions (from the image; also pinned in `requirements.txt`, and torch in the `Dockerfile`); v2.0.0 switches to one issue/branch/PR per spec + CI gate (ADR `docs/decisions/0001-branch-per-spec-and-ci.md`). Still TODO in §1: sentence-transformers (ingestion phase) and LLM provider. Note: the local `.venv` (3.10.11) has different versions (e.g. FastAPI 0.142.2, SQLAlchemy 2.0.54) → recreate it with 3.11 from the pinned `requirements.txt`.
   **En curso (2026-11-16).** v0.2, traducida al inglés. §1-§4 cerradas (decidido el 16-11: §3 solo exige actualizar la otra spec; todo en inglés desde el 16-11, incluidas specs y docs; estructura `specs/NNN-name/` aceptada; proveedor y versión del LLM se fijarán en la constitución cuando Marco investigue). `chuleta`, `razonamiento.md` y `requirements_copia.txt` añadidos a `.gitignore`. Falta:
   - §1: versiones de las librerías (TODO en la tabla) y LLM.
   - §5: done 2026-11-16 (Marco's answers + suggestions A-E accepted). Code that violates it, to become Phase 2 tasks: `"soyadmin"` bypass (`app/main.py:138`), `verify_exp: False` (`:143`), JWT payload printed (`:144`), admin credentials as query params in `/register` (`:480`).
@@ -78,20 +78,23 @@
   - §6 (gobernanza): cómo se cambia la constitución.
   - Riesgo abierto: medir si torch + Whisper tiny + MiniLM caben en 512 MB (proponer como una de las primeras tareas de la Fase 3).
   - Para el `tasks.md` de la Fase 2: el fixture de testcontainers tiene que fallar, no saltar, si no hay Docker.
-- [ ] 2. Crear `specs/000-vision.md`: objetivo, alcance y lo que queda fuera (fine-tuning, diarización). Sacarlo de `instrucciones.txt`.
-- [ ] 3. Crear `specs/001-modelo-datos/spec.md`, retroactiva. Ejemplo de criterio EARS: *"SI se intenta guardar un embedding con `session_id` y `batch_id` a la vez, o sin ninguno, ENTONCES el sistema DEBERÁ rechazarlo"* → `test_embedding_two_transcriptions` y `test_embedding_no_transcriptions`.
+- [ ] 2. Create `specs/000-vision.md`: goal, scope, non-goals. **In progress (2026-11-16):** skeleton + Marco's first draft; §6 roadmap filled. Pending: review §1-§5 with Marco (questions 1-15 of the review).
+- [ ] 3. Create `specs/001-data-model/spec.md`, retroactive. Ejemplo de criterio EARS: *"SI se intenta guardar un embedding con `session_id` y `batch_id` a la vez, o sin ninguno, ENTONCES el sistema DEBERÁ rechazarlo"* → `test_embedding_two_transcriptions` y `test_embedding_no_transcriptions`.
 - [ ] 4. Crear `specs/002-postgres-pgvector/spec.md` y `tasks.md`, con los pendientes de la sección 2 como tareas.
-- [ ] 5. Mover `razonamiento.md` a `docs/decisiones/` (formato ADR) y decidir qué hacer con `instrucciones.txt` (pasar a `specs/` lo que siga vigente).
-- [ ] 6. Cerrar la Fase 2 siguiendo su `tasks.md`.
-- [ ] 7. **Reanudar el desarrollo**: Fase 3 (ingesta) con el flujo completo: `spec.md` → clarify → `plan.md` → analyze → `tasks.md` → implementar (test primero, un commit por tarea) → actualizar la spec.
+- [ ] 5. Turn `razonamiento.md` into an ADR in `docs/decisions/` (next number after 0001) and decide what to do with `instrucciones.txt` (move what is still valid into `specs/`).
+- [ ] 6. Close Phase 2 following its `tasks.md`.
+- [ ] 7. Phase 3 — CI: `specs/003-ci/`. GitHub Actions running the suite on push/PR (testcontainers works on GitHub's Ubuntu runners), `requirements-dev.txt` (pytest, pytest-asyncio, httpx, jiwer, testcontainers), exclude/rewrite GPU tests in `tests/test_fastapi.py`. From here on, every spec = issue + branch + PR (constitution v2.0.0 §4).
+- [ ] 8. **Resume development**: Phase 4 (ingestion) with the full flow: issue + branch `004-ingestion` → `spec.md` → clarify → `plan.md` → analyze → `tasks.md` → implement (test first, one commit per task) → update the spec → PR with green CI → merge.
 
 Estructura objetivo:
 ```
 CLAUDE.md
 specs/constitution.md
 specs/000-vision.md
-specs/NNN-nombre/{spec.md, plan.md, tasks.md}
-docs/decisiones/
+specs/NNN-name/{spec.md, plan.md, tasks.md}
+docs/architecture.md
+docs/decisions/NNNN-title.md
+.github/workflows/
 ```
 
 **Al empezar la próxima sesión:** recordarle a Marco en qué punto de la sección 3.4 está y proponerle seguir con el primer paso sin marcar. Al terminar cada paso, actualizar la casilla y la fecha de este archivo.
