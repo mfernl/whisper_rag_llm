@@ -1,5 +1,5 @@
 # Constitution — whisper_rag_llm
-Version: 2.0.0 · Date: 2026-11-16
+Version: 3.0.0 · Date: 2026-11-17
 
 ## 1. Fixed stack
 Changing any of these elements requires opening a decision record (ADR) in `docs/decisions/`.
@@ -51,7 +51,7 @@ Exact versions are pinned in `requirements.txt` (and torch also in the `Dockerfi
 - **Credentials.** User and admin passwords are stored only as bcrypt hashes. Credentials and tokens never travel in URLs or query strings.
 - **Tokens.** Every access token has an expiry date and it is always verified. There are no hard-coded tokens or authentication bypasses.
 - **Third parties.** Only text (retrieved transcript chunks and the user's question) is sent to the external LLM provider. Audio and embeddings never leave the server. This is stated in the README and in the description of every endpoint that calls the LLM.
-- **Persistence.** When a real-time session is closed, its full transcription is stored in the database.
+- **Persistence.** Each transcription request of a real-time session is stored in the database as soon as it is transcribed, linked to its session, with the date and time it was received and Whisper's full output. Closing a session records its close date and time. Transcriptions are never kept only in memory. See `docs/decisions/0002-store-each-realtime-request.md`.
 - **Retention.** Transcriptions and their embeddings are kept in the database. Users cannot delete them; deletion is not a feature.
 - **Upload limits.** Every audio upload is restricted by format (only `.wav`), maximum size per request and maximum amount of audio per user. The limits are stated in the endpoint description; their values are defined in the feature specs, not here.
 - **Limit errors.** Exceeding a limit returns a clear error: 413 for size, 429 or 403 for quota (exact code chosen in the feature spec), and nothing is stored.

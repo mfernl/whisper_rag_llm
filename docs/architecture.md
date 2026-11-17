@@ -35,8 +35,8 @@ Each part is labelled **[current]** (already in the code), **[decided]** (agreed
 
 **Real-time** — `/crearRTsession` → `/broadcast` (chunks) → `/cerrarRTsession`
 - [current] Partial transcriptions are kept in an in-memory dict (`sesiones`) and are lost on restart.
-- [decided] On close, the full transcription is persisted in `rt_session` with the owner's `username` and the **date and time the session started**. The session keeps **each transcription request separately**, with the date and time it was received and its own text.
-- Open design question for the Phase 4 spec: store the requests as a JSON list inside `rt_session.transcription`, or as rows of a new table linked to the session.
+- [decided] `rt_session` stores the owner's `username` and the session's **create and close date and time**. Each `/broadcast` request is stored **as soon as it is transcribed** as a row of a new table `RealTimeTranscription` (N:1 to `rt_session`): the **date and time it was received** and Whisper's full output, segments included. See ADR `docs/decisions/0002-store-each-realtime-request.md`. [planned, Phase 4]
+- Real time of a segment ≈ the request's received time + the segment's `start` offset (Whisper's offsets count from the start of that chunk).
 
 ---
 

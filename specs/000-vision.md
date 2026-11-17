@@ -31,7 +31,7 @@ How the pieces connect → `docs/architecture.md`. Rules → `specs/constitution
 - User data deletion (constitution §5).
 - Audio formats other than `.wav`.
 - A graphical frontend: the API, with its Swagger UI, is the interface.
-- Asking questions about a real-time session before it is closed: its transcription is stored only when the session closes (constitution §5).
+- Asking questions about a real-time session before it is closed. Each request is stored as it arrives (constitution §5), but embeddings are not created yet; `004-ingestion` decides whether this stays a non-goal (ADR 0002).
 
 ## 6. Success criteria
 - Answer quality is evaluated with RAGAS on a fixed set of questions about real transcriptions, and the results are published in the README. Target values are defined in the Phase 7 spec.
