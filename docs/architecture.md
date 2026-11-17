@@ -72,8 +72,8 @@ question
 
 ## 5. Agent (Phase 6) [planned]
 A LangGraph agent wraps the question pipeline as tools:
-- `buscar_en_transcripcion`: the vector search from section 4.
-- `consultar_metadatos`: SQL over transcription metadata (dates, context labels…).
+- `search_transcript`: the vector search from section 4.
+- `query_metadata`: SQL over transcription metadata (dates, context labels…).
 
 ---
 

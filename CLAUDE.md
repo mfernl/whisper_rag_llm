@@ -1,95 +1,94 @@
 # CLAUDE.md — whisper_rag_llm
 
-> Claude Code carga este archivo al empezar cada sesión. Explica **cómo trabajamos** y **por dónde seguir**.
-> Última actualización: 2026-11-14.
+> Claude Code loads this file at the start of every session. It explains **how we work** and **where to pick up**.
+> Last updated: 2026-11-17.
 
 ---
 
-## 1. Cómo tiene que trabajar Claude en este proyecto
+## 1. How Claude has to work in this project
 
-### Mentoría (reglas heredadas de `instrucciones.txt`)
+### Mentoring (rules inherited from `instrucciones.txt`)
 - **Everything in English (decided 2026-11-16)**: conversations, code, commits, specs and docs. Answer step by step.
 - **English practice**: point out Marco's *big* grammar or spelling mistakes (briefly, at the start of the reply, with the corrected phrase). Ignore small slips.
-- **No dar la solución completa.** Dar pistas, preguntas guía, esqueletos con huecos (`TODO`) y criterios para comprobar el resultado. Si Marco pide "hazme X", darle un esqueleto con pistas.
-- Diagnosticar a partir del código y la salida que pegue Marco, y señalarle dónde tiene que mirar.
+- **Don't give the full solution.** Give hints, guiding questions, skeletons with gaps (`TODO`) and criteria to check the result. If Marco asks "do X for me", give him a skeleton with hints.
+- Diagnose from the code and the output Marco pastes, and point him to where he has to look.
 - **Design patterns + SOLID (requested 2026-11-17)**: when a new feature starts (at the `plan.md` step, from Phase 4 on), suggest one or more architecture or design patterns that fit (e.g. factory, singleton, strategy, repository, dependency injection), explaining *why* each one fits and linking a source. Say so when no pattern is needed, and don't force one in. Also remind Marco to check his plan against the SOLID principles, and point out the principles that matter for that feature.
-- Las APIs de LangChain, LangGraph y RAGAS cambian rápido: **consultar la documentación actual** antes de guiarle en esas fases.
-- Entorno: Windows, **cmd.exe**, venv en `.venv`, Python 3.10.11. El Dockerfile usa `python:3.11-slim-bookworm`. **Decidido (2026-11-14): recrear el `.venv` con Python 3.11** (la versión oficial es la del Dockerfile; ver `specs/constitution.md`).
+- The LangChain, LangGraph and RAGAS APIs change fast: **check the current documentation** before guiding him through those phases.
+- Environment: Windows, **cmd.exe**, venv in `.venv`, Python 3.10.11. The Dockerfile uses `python:3.11-slim-bookworm`. **Decided (2026-11-14): recreate the `.venv` with Python 3.11** (the official version is the Dockerfile's; see `specs/constitution.md`).
 
-### Citar siempre las fuentes (petición explícita de Marco)
-- Toda afirmación sobre **cómo funciona SDD** (o cualquier técnica o herramienta) tiene que llevar la **fuente con enlace**.
-- Cada propuesta sobre **cómo debería trabajar Marco** tiene que explicar el **porqué** y de dónde sale.
-- Cuando una recomendación sea **criterio propio de Claude** y no venga de una fuente, hay que decirlo así, con el razonamiento.
-- Las referencias base están en la sección 5.
-
----
-
-## 2. Estado actual (2026-11-12)
-
-**El desarrollo está EN PAUSA.** Antes de seguir, Marco quiere pasar el proyecto a un flujo **SDD (Spec-Driven Development)**. El plan está en la sección 3.
-
-- Contexto detallado de las sesiones anteriores en `instrucciones.txt` (ignorado por git y **desactualizado**: dice que la Fase 2 no ha empezado). En `razonamiento.md` se explica por qué se mantiene SQLAlchemy, y `chuleta_comandos_rag_llm.md` es la chuleta de comandos.
-- **Fase 1 (modelo de datos y tests): cerrada.** Modelos `RealTimeSession`, `BatchTranscription` y `TranscriptionEmbeddings`, con el `CheckConstraint` `check_one_source`. Hay 6 tests en `tests/test_db.py` contra SQLite en memoria (hoy no se pueden ejecutar: ver gap G1 en `specs/001-data-model/spec.md`).
-- **Fase 2 (Postgres + pgvector + Alembic): casi cerrada.** Último commit: `75c39fe`. Ya hay servicio `db` en compose con volumen y healthcheck, `pg_uri` lee el `.env`, la columna es `Vector(384)` y existe la migración `alembic/versions/e6edc15da35a_esquema_inicial.py`. En `main.py` están comentados `create_all` y `CREATE EXTENSION`.
-  Pendientes (con preguntas guía, sin dar la solución):
-  1. ¿Está aplicada la migración? Comprobarlo con `alembic current`, y con `\dt` y `\dx` en psql.
-  2. Con una BD vacía (después de `down -v`), ¿quién crea la extensión `vector`? ¿La crea la migración?
-  3. ¿Siguen pasando los tests en SQLite ahora que hay una columna `Vector`? ¿Habría que ejecutarlos contra Postgres?
-  4. Sin commitear: el cambio de `.gitignore`, `chuleta_comandos_rag_llm.md`, `razonamiento.md` y `requirements_copia.txt` (¿se commitea o se borra?).
-- **Remaining phases** (reordered 2026-11-16, see `specs/000-vision.md` §6): 3 CI (GitHub Actions + `requirements-dev.txt` + exclude GPU tests), 4 ingestion (time-window chunking + sentence-transformers), 5 `/ask` endpoint with citations, 6 LangGraph agent (tools `buscar_en_transcripcion` and `consultar_metadatos`), 7 RAGAS evaluation, 8 worker + multi-service compose, 9 README + CD to Render.
+### Always cite sources (Marco's explicit request)
+- Every claim about **how SDD works** (or any technique or tool) must come with its **source and link**.
+- Every proposal about **how Marco should work** must explain **why** and where it comes from.
+- When a recommendation is **Claude's own judgment** and doesn't come from a source, say so, with the reasoning.
+- The base references are in section 5.
 
 ---
 
-## 3. Plan: pasar a SDD y después reanudar
+## 2. Current state (2026-11-17)
 
-### 3.1 Qué es SDD (resumen con fuentes)
-- La **especificación es la fuente de verdad**. El código, los tests y la documentación salen de ella, y cualquier cambio empieza por modificar la spec. [Allstacks], [Allegro]
-- Hay tres niveles: *spec-first* (la spec se escribe antes de programar), *spec-anchored* (la spec se mantiene viva después) y *spec-as-source* (solo se edita la spec; todavía no es práctico). [Böckeler], [InfoWorld]
-- El flujo de referencia es parecido en las dos herramientas principales. **GitHub Spec Kit**: constitution → specify → clarify → plan → tasks → analyze → implement [Augment], [CodeMySpec-SK], [Bitovi]. **Kiro**: `requirements.md` (criterios en notación EARS) → `design.md` → `tasks.md` [Kiro], [CodeMySpec-Kiro].
+**Development is PAUSED.** Before continuing, Marco wants to move the project to an **SDD (Spec-Driven Development)** workflow. The plan is in section 3.
 
-### 3.2 Buenas prácticas que adoptamos y por qué
+- Detailed context from earlier sessions is in `instrucciones.txt` (ignored by git and **out of date**: it says Phase 2 hasn't started). `razonamiento.md` explains why SQLAlchemy is kept, and `chuleta_comandos_rag_llm.md` is the command cheat sheet (both ignored by git, in Spanish).
+- **Phase 1 (data model and tests): closed.** Models `RealTimeSession`, `BatchTranscription` and `TranscriptionEmbeddings`, with the `check_one_source` `CheckConstraint`. There are 6 tests in `tests/test_db.py` against in-memory SQLite (they can't run today: see gap G1 in `specs/001-data-model/spec.md`). Spec: `specs/001-data-model/spec.md`.
+- **Phase 2 (Postgres + pgvector + Alembic): almost closed.** Last Phase 2 code commit: `75c39fe`. The `db` service is in compose with a volume and healthcheck, `pg_uri` reads the `.env`, the column is `Vector(384)` and the migration `alembic/versions/e6edc15da35a_esquema_inicial.py` exists. `create_all` and `CREATE EXTENSION` are commented out in `main.py`.
+  Pending (with guiding questions, without giving the solution):
+  1. Is the migration applied? Check with `alembic current`, and with `\dt` and `\dx` in psql.
+  2. With an empty DB (after `down -v`), who creates the `vector` extension? Does the migration create it?
+  3. Do the tests still pass on SQLite now that there is a `Vector` column? Should they run against Postgres? (See gaps G1-G4 in spec 001.)
+- **Remaining phases** (reordered 2026-11-16, see `specs/000-vision.md` §7): 3 CI (GitHub Actions + `requirements-dev.txt` + exclude GPU tests), 4 storage and ingestion (time-window chunking + sentence-transformers), 5 `/ask` endpoint with citations, 6 LangGraph agent (tools `search_transcript` and `query_metadata`), 7 RAGAS evaluation, 8 worker + multi-service compose, 9 README + CD to Render.
 
-| Práctica | Por qué | Fuente |
+---
+
+## 3. Plan: move to SDD, then resume
+
+### 3.1 What SDD is (summary with sources)
+- The **spec is the source of truth**. Code, tests and docs come from it, and every change starts by changing the spec. [Allstacks], [Allegro]
+- There are three levels: *spec-first* (the spec is written before coding), *spec-anchored* (the spec is kept alive afterwards) and *spec-as-source* (only the spec is edited; not practical yet). [Böckeler], [InfoWorld]
+- The reference workflow is similar in the two main tools. **GitHub Spec Kit**: constitution → specify → clarify → plan → tasks → analyze → implement [Augment], [CodeMySpec-SK], [Bitovi]. **Kiro**: `requirements.md` (criteria in EARS notation) → `design.md` → `tasks.md` [Kiro], [CodeMySpec-Kiro].
+
+### 3.2 Good practices we adopt and why
+
+| Practice | Why | Source |
 |---|---|---|
-| Separar el **qué** (spec) del **cómo** (plan y tareas) | La spec es estable y el plan se puede tirar. Mezclarlos genera confusión y complica el trabajo incremental | [Allegro] |
-| Tener una **constitución** con los principios comunes | Así no se repiten los estándares en cada spec y se mantienen coherentes | [Allegro], [Augment], [Bitovi] |
-| Una **spec por funcionalidad o fase**, no un documento monolítico | Cabe mejor en el contexto del agente y es más fácil de mantener | [Allegro], [Osmani] |
-| **Criterios de aceptación verificables** en notación EARS (CUANDO/SI … EL SISTEMA DEBERÁ …) | Quitan ambigüedad y se pueden convertir directamente en tests | [Kiro], [CodeMySpec-Kiro] |
-| **Tareas pequeñas**, enlazadas a un criterio y que quepan en una sesión | Las tareas grandes y difusas no salen bien con un contexto limitado | [Allegro], [Kilo], [CodeMySpec-Kiro] |
-| **Tests como bucle de feedback** (test primero) | Le dan al agente, y a Marco, un objetivo concreto que comprobar | [Allegro] |
-| **Iterar** la spec, sin quedarse corto ni pasarse | Una spec vaga deja demasiado a la interpretación y una sobredetallada acaba siendo código en prosa | [Allegro], [Osmani], [Intent] |
-| **Mantener la spec al día** (spec-anchored) | Si la spec se desvía del código, deja de servir | [Intent], [Allegro] |
-| **Ajustar el rigor al riesgo**: nada de spec para cambios triviales | En tareas triviales SDD da más trabajo del que ahorra | [Allegro] |
-| **Revisión humana**, y si se puede, una sesión nueva sin contexto previo | Una sesión limpia detecta lo que se le escapó a la original. La responsabilidad final es de la persona | [Allegro] |
+| Separate the **what** (spec) from the **how** (plan and tasks) | The spec is stable and the plan can be thrown away. Mixing them causes confusion and makes incremental work harder | [Allegro] |
+| Have a **constitution** with the shared principles | Standards aren't repeated in every spec and stay consistent | [Allegro], [Augment], [Bitovi] |
+| One **spec per feature or phase**, not one monolithic document | It fits better in the agent's context and is easier to maintain | [Allegro], [Osmani] |
+| **Verifiable acceptance criteria** in EARS notation (WHEN/IF … THE SYSTEM SHALL …) | They remove ambiguity and can be turned directly into tests | [Kiro], [CodeMySpec-Kiro] |
+| **Small tasks**, linked to a criterion and small enough for one session | Big, vague tasks don't go well with a limited context | [Allegro], [Kilo], [CodeMySpec-Kiro] |
+| **Tests as the feedback loop** (test first) | They give the agent, and Marco, a concrete target to check | [Allegro] |
+| **Iterate** on the spec, without too little or too much detail | A vague spec leaves too much to interpretation, and an over-detailed one ends up as code in prose | [Allegro], [Osmani], [Intent] |
+| **Keep the spec up to date** (spec-anchored) | A spec that drifts from the code stops being useful | [Intent], [Allegro] |
+| **Match rigour to risk**: no spec for trivial changes | For trivial tasks SDD costs more work than it saves | [Allegro] |
+| **Human review**, ideally in a new session with no previous context | A clean session catches what the original one missed. The final responsibility is the person's | [Allegro] |
 
-### 3.3 Decisiones de adaptación (criterio propio de Claude, con su razonamiento)
-- **SDD a mano, sin instalar Spec Kit ni Kiro.** En Spec Kit es el agente quien genera las specs [Augment], [Bitovi], y eso choca con la regla de mentoría de no dar soluciones. Escribirlas a mano obliga a Marco a pensar los requisitos, que es justo lo que quiere aprender. *Se puede replantear si quiere probar la herramienta.*
-- **Nivel spec-anchored.** Spec-as-source todavía no es práctico [Böckeler], [InfoWorld], y spec-first a secas deja que la spec se quede obsoleta [Intent].
-- **Reparto de papeles.** Marco escribe la spec, el plan y las tareas. Claude hace de *clarify* y *analyze* (preguntas sobre ambigüedades y comprobación de coherencia entre spec y plan), que son pasos de Spec Kit [Augment], y da pistas al implementar.
-- **Las specs de las Fases 1 y 2 serán retroactivas y breves.** Ya están hechas; documentarlas sirve para tener trazabilidad (criterio → test), no para volver a diseñarlas.
+### 3.3 Adaptation decisions (Claude's own judgment, with reasoning)
+- **SDD by hand, without installing Spec Kit or Kiro.** In Spec Kit the agent generates the specs [Augment], [Bitovi], which clashes with the mentoring rule of not giving solutions. Writing them by hand makes Marco think through the requirements, which is exactly what he wants to learn. *Can be revisited if he wants to try the tool.*
+- **Spec-anchored level.** Spec-as-source isn't practical yet [Böckeler], [InfoWorld], and plain spec-first lets the spec go stale [Intent].
+- **Split of roles.** Marco writes the spec, the plan and the tasks. Claude does *clarify* and *analyze* (questions about ambiguities and checking consistency between spec and plan), which are Spec Kit steps [Augment], and gives hints during implementation.
+- **The Phase 1 and 2 specs are retroactive and short.** That work is already done; documenting it gives traceability (criterion → test), not a redesign.
 
-### 3.4 Pasos de la migración (en orden)
-- [x] 0. Crear este `CLAUDE.md`.
-- [x] 1. Create `specs/constitution.md` (written by Marco with guiding questions from Claude). **Done 2026-11-16.** v1.0.0 adopted; v1.1.0 adds pinned stack versions (from the image; also pinned in `requirements.txt`, and torch in the `Dockerfile`); v2.0.0 switches to one issue/branch/PR per spec + CI gate (ADR `docs/decisions/0001-branch-per-spec-and-ci.md`). Still TODO in §1: sentence-transformers (ingestion phase) and LLM provider. Note: the local `.venv` (3.10.11) has different versions (e.g. FastAPI 0.142.2, SQLAlchemy 2.0.54) → recreate it with 3.11 from the pinned `requirements.txt`.
-  **En curso (2026-11-16).** v0.2, traducida al inglés. §1-§4 cerradas (decidido el 16-11: §3 solo exige actualizar la otra spec; todo en inglés desde el 16-11, incluidas specs y docs; estructura `specs/NNN-name/` aceptada; proveedor y versión del LLM se fijarán en la constitución cuando Marco investigue). `chuleta`, `razonamiento.md` y `requirements_copia.txt` añadidos a `.gitignore`. Falta:
-  - §1: versiones de las librerías (TODO en la tabla) y LLM.
-  - §5: done 2026-11-16 (Marco's answers + suggestions A-E accepted). Code that violates it, to become Phase 2 tasks: `"soyadmin"` bypass (`app/main.py:138`), `verify_exp: False` (`:143`), JWT payload printed (`:144`), admin credentials as query params in `/register` (`:480`).
-  - §5 Retention changed: users cannot delete transcriptions (not a feature). §6 done: semantic versioning, own `docs:` commit + ADR if MAJOR, affected specs updated in the same change, constitution wins.
-  - Created `docs/architecture.md` (pipelines, components, what leaves the server). Keep it updated with each phase.
-  - §6 (gobernanza): cómo se cambia la constitución.
-  - Riesgo abierto: medir si torch + Whisper tiny + MiniLM caben en 512 MB (proponer como una de las primeras tareas de la Fase 3).
-  - Para el `tasks.md` de la Fase 2: el fixture de testcontainers tiene que fallar, no saltar, si no hay Docker.
-- [x] 2. Create `specs/000-vision.md`: goal, scope, non-goals. **Done 2026-11-16.** Problem/Solution split, goals, non-goals, success criteria, 9-phase roadmap (storage of transcriptions goes at the start of Phase 4). Risks to check in Phases 8-9 specs: Render free tier may not offer background workers, free Postgres has a limited lifetime, and Render doesn't run Docker Compose (Blueprint `render.yaml`).
-  - Decided 2026-11-16 (for the Phase 4 spec, NOT implemented yet): `batch_transcription` gets the date+time the request was received; `rt_session` gets its start date+time and stores each transcription request separately (received date+time + text). Open: JSON list vs separate table; timestamptz in UTC vs formatted strings; how embedding `start_time`/`end_time` relate to request times.
-- [ ] 3. Create `specs/001-data-model/spec.md`, retroactive. **Draft done 2026-11-17** (Marco's draft, corrected and completed by Claude). Pending: Marco reviews it and answers the open questions in §7, then commit. Gaps G1-G4 become tasks of `002`. Ejemplo de criterio EARS: *"SI se intenta guardar un embedding con `session_id` y `batch_id` a la vez, o sin ninguno, ENTONCES el sistema DEBERÁ rechazarlo"* → `test_embedding_two_transcriptions` y `test_embedding_no_transcriptions`.
-- [ ] 4. Crear `specs/002-postgres-pgvector/spec.md` y `tasks.md`, con los pendientes de la sección 2 como tareas.
-- [ ] 5. Turn `razonamiento.md` into an ADR in `docs/decisions/` (next number after 0001) and decide what to do with `instrucciones.txt` (move what is still valid into `specs/`).
+### 3.4 Migration steps (in order)
+- [x] 0. Create this `CLAUDE.md`.
+- [x] 1. Create `specs/constitution.md` (written by Marco with guiding questions from Claude). **Done 2026-11-16.** v1.0.0 adopted; v1.1.0 adds pinned stack versions (from the image; also pinned in `requirements.txt`, and torch in the `Dockerfile`); v2.0.0 switches to one issue/branch/PR per spec + CI gate (ADR `docs/decisions/0001-branch-per-spec-and-ci.md`); v3.0.0 (2026-11-17) redefines §5 Persistence (ADR 0002, see step 8).
+  - Still TODO in §1: sentence-transformers version (Phase 4) and LLM provider and model (after Marco's research).
+  - Note: the local `.venv` (3.10.11) has different versions (e.g. FastAPI 0.142.2, SQLAlchemy 2.0.54) → recreate it with 3.11 from the pinned `requirements.txt`.
+  - Code that violates §5, to become Phase 2 tasks: `"soyadmin"` bypass (`app/main.py:138`), `verify_exp: False` (`:143`), JWT payload printed (`:144`), admin credentials as query params in `/register` (`:480`).
+  - Open risk: measure whether torch + Whisper tiny + MiniLM fit in 512 MB (propose it as one of the first Phase 3 tasks).
+  - For the Phase 2 `tasks.md`: the testcontainers fixture must fail, not skip, when Docker isn't available.
+- [x] 2. Create `specs/000-vision.md`: goal, scope, non-goals. **Done 2026-11-16.** Problem/Solution split, goals, non-goals, success criteria, 9-phase roadmap (storage of transcriptions goes at the start of Phase 4). Risks to check in the Phase 8-9 specs: Render's free tier may not offer background workers, free Postgres has a limited lifetime, and Render doesn't run Docker Compose (Blueprint `render.yaml`).
+- [x] 3. Create `specs/001-data-model/spec.md`, retroactive. **Done 2026-11-17** (commit `6acad57`; Marco's draft, corrected and completed by Claude). Q2 and Q4 in §7 are left for `004-ingestion`. Gaps G1-G4 become tasks of `002`.
+- [ ] 4. Create `specs/002-postgres-pgvector/spec.md` and `tasks.md`, with the pending items from section 2 and gaps G1-G4 of spec 001 as tasks.
+- [ ] 5. Turn `razonamiento.md` into an ADR in `docs/decisions/` (next number: 0003) and decide what to do with `instrucciones.txt` (move what is still valid into `specs/`).
 - [ ] 6. Close Phase 2 following its `tasks.md`.
-- [ ] 7. Phase 3 — CI: `specs/003-ci/`. GitHub Actions running the suite on push/PR (testcontainers works on GitHub's Ubuntu runners), `requirements-dev.txt` (pytest, pytest-asyncio, httpx, jiwer, testcontainers), exclude/rewrite GPU tests in `tests/test_fastapi.py`. From here on, every spec = issue + branch + PR (constitution v2.0.0 §4).
-  - Decided by Marco 2026-11-17 (goes into the `004-ingestion` spec, NOT implemented yet): new table `RealTimeTranscription`, N:1 to `RealTimeSession` (one row per `/broadcast` request: text + received date-time). `RealTimeSession` keeps only `session_id`, `username`, create and close dates (its JSON `transcription` and `exp_date` go away). Columns: `id` (PK), `session_id` (FK), received date-time, full Whisper output (segments included). **Each `/broadcast` writes its row immediately** (option b) → Constitution amended to **v3.0.0** (§5 Persistence) with ADR `docs/decisions/0002-store-each-realtime-request.md`, ripple done in `000-vision.md` §5, `docs/architecture.md` §2 and `001` §7 (2026-11-17, not committed yet). Still open: inactivity expiry after a restart (derive from last received time?), replacing the in-memory token check with `username`, when ingestion runs (at close or per request), JSONB vs JSON, timestamptz UTC, bug `timedelta(RTSESSION_EXP)` = days in `/broadcast` (`app/main.py:234`). When 004 is done, update `001` and `docs/architecture.md` §2 (constitution §3).
-- [ ] 8. **Resume development**: Phase 4 (ingestion) with the full flow: issue + branch `004-ingestion` → `spec.md` → clarify → `plan.md` → analyze → `tasks.md` → implement (test first, one commit per task) → update the spec → PR with green CI → merge.
+- [ ] 7. Phase 3 — CI: `specs/003-ci/`. GitHub Actions running the suite on push/PR (testcontainers works on GitHub's Ubuntu runners), `requirements-dev.txt` (pytest, pytest-asyncio, httpx, jiwer, testcontainers), exclude/rewrite GPU tests in `tests/test_fastapi.py`. From here on, every spec = issue + branch + PR (constitution §4).
+- [ ] 8. **Resume development**: Phase 4 (storage and ingestion) with the full flow: issue + branch `004-ingestion` → `spec.md` → clarify → `plan.md` → analyze → `tasks.md` → implement (test first, one commit per task) → update the spec → PR with green CI → merge.
+  Decisions already made for the `004-ingestion` spec (NOT implemented yet):
+  - 2026-11-16: `batch_transcription` gets the date+time the request was received.
+  - 2026-11-17 (ADR `docs/decisions/0002-store-each-realtime-request.md`, commit `f57f946`): new table `RealTimeTranscription`, N:1 to `RealTimeSession`, with `id` (PK), `session_id` (FK), received date-time and Whisper's full output (segments included). `RealTimeSession` keeps only `session_id`, `username`, create and close dates (its JSON `transcription` and `exp_date` go away). **Each `/broadcast` writes its row immediately.**
+  - Still open: inactivity expiry after a restart (derive it from the last received time?), replacing the in-memory token check with `username`, when ingestion runs (at close or per request), JSONB vs JSON, timestamptz in UTC, how embedding `start_time`/`end_time` relate to request times, bug `timedelta(RTSESSION_EXP)` = days in `/broadcast` (`app/main.py:234`).
+  - When 004 is done, update `001` and `docs/architecture.md` §2 (constitution §3).
 
-Estructura objetivo:
+Target structure:
 ```
 CLAUDE.md
 specs/constitution.md
@@ -100,26 +99,26 @@ docs/decisions/NNNN-title.md
 .github/workflows/
 ```
 
-**Al empezar la próxima sesión:** recordarle a Marco en qué punto de la sección 3.4 está y proponerle seguir con el primer paso sin marcar. Al terminar cada paso, actualizar la casilla y la fecha de este archivo.
+**At the start of the next session:** remind Marco which step of section 3.4 he is on and propose continuing with the first unchecked step. When each step is finished, tick its box and update the date at the top of this file.
 
 ---
 
-## 4. Comandos útiles
-Ver `chuleta_comandos_rag_llm.md`. Tests: `python -m pytest -v tests\test_db.py` (en cmd, con el `.venv` activado).
+## 4. Useful commands
+See `chuleta_comandos_rag_llm.md`. Tests: `python -m pytest -v tests\test_db.py` (in cmd, with the `.venv` activated).
 
 ---
 
-## 5. Referencias
-- [Böckeler] B. Böckeler, *Understanding Spec-Driven-Development: Kiro, spec-kit, and Tessl*, martinfowler.com (oct. 2025): https://www.martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html
-- [Allegro] K. Piechna, *Spec-driven development best practices*, Allegro Tech Blog (jun. 2026): https://blog.allegro.tech/2026/06/spec-driven-development-best-practices.html
+## 5. References
+- [Böckeler] B. Böckeler, *Understanding Spec-Driven-Development: Kiro, spec-kit, and Tessl*, martinfowler.com (Oct 2025): https://www.martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html
+- [Allegro] K. Piechna, *Spec-driven development best practices*, Allegro Tech Blog (Jun 2026): https://blog.allegro.tech/2026/06/spec-driven-development-best-practices.html
 - [Osmani] A. Osmani, *How to write a good spec for AI agents*: https://addyosmani.com/blog/good-spec/
 - [Intent] *Best Practices for Spec-Driven Development*, intent-driven.dev: https://intent-driven.dev/knowledge/best-practices/
 - [Allstacks] *Spec-driven development*, Allstacks: https://www.allstacks.com/blog/spec-driven-development
 - [Kilo] *Spec-Driven Development pattern*, Kilo: https://path.kilo.ai/introduction/patterns/spec-driven-development/
-- [Kiro] *Specs — concepts*, documentación oficial de Kiro: https://kiro.dev/docs/specs/concepts
+- [Kiro] *Specs — concepts*, official Kiro documentation: https://kiro.dev/docs/specs/concepts
 - [CodeMySpec-Kiro] *Kiro Specs Explained: EARS, Spec Mode, and the Trade-offs*: https://codemyspec.com/blog/kiro-specs-explained
 - [CodeMySpec-SK] *GitHub Spec Kit: How It Works and When to Use It (2026)*: https://codemyspec.com/blog/github-spec-kit-guide
 - [Augment] *GitHub Spec Kit practical guide (SDD workflow)*: https://www.augmentcode.com/guides/github-spec-kit-practical-guide-sdd-workflow
 - [Bitovi] *Spec Kit — Analysis*, Bitovi wiki: https://wiki.at.bitovi.com/wiki/spaces/AIEnabledDevelopment/pages/1799847940/Spec+Kit+-+Analysis
 - [InfoWorld] M. Heller, *Four cutting-edge tools for spec-driven development*: https://infoworld.com/article/4171332/four-cutting-edge-tools-for-spec-driven-development.html
-- Repositorio oficial de Spec Kit (comprobar los nombres actuales de los comandos antes de citarlos): https://github.com/github/spec-kit
+- Official Spec Kit repository (check the current command names before citing them): https://github.com/github/spec-kit
