@@ -1,7 +1,7 @@
 # CLAUDE.md — whisper_rag_llm
 
 > Claude Code loads this file at the start of every session. It explains **how we work** and **where to pick up**.
-> Last updated: 2026-11-17.
+> Last updated: 2026-11-19.
 
 ---
 
@@ -9,6 +9,7 @@
 
 ### Mentoring (rules inherited from `instrucciones.txt`)
 - **Everything in English (decided 2026-11-16)**: conversations, code, commits, specs and docs. Answer step by step.
+- **No `§` sign (decided 2026-11-19)**: write "section N" (e.g. "constitution section 5"), because Marco can't type `§` on his keyboard.
 - **English practice**: point out Marco's *big* grammar or spelling mistakes (briefly, at the start of the reply, with the corrected phrase). Ignore small slips.
 - **Don't give the full solution.** Give hints, guiding questions, skeletons with gaps (`TODO`) and criteria to check the result. If Marco asks "do X for me", give him a skeleton with hints.
 - Diagnose from the code and the output Marco pastes, and point him to where he has to look.
@@ -35,7 +36,7 @@
   1. Is the migration applied? Check with `alembic current`, and with `\dt` and `\dx` in psql.
   2. With an empty DB (after `down -v`), who creates the `vector` extension? Does the migration create it?
   3. Do the tests still pass on SQLite now that there is a `Vector` column? Should they run against Postgres? (See gaps G1-G4 in spec 001.)
-- **Remaining phases** (reordered 2026-11-16, see `specs/000-vision.md` §7): 3 CI (GitHub Actions + `requirements-dev.txt` + exclude GPU tests), 4 storage and ingestion (time-window chunking + sentence-transformers), 5 `/ask` endpoint with citations, 6 LangGraph agent (tools `search_transcript` and `query_metadata`), 7 RAGAS evaluation, 8 worker + multi-service compose, 9 README + CD to Render.
+- **Remaining phases** (reordered 2026-11-16, see `specs/000-vision.md` section 7): 3 CI (GitHub Actions + `requirements-dev.txt` + exclude GPU tests), 4 storage and ingestion (time-window chunking + sentence-transformers), 5 `/ask` endpoint with citations, 6 LangGraph agent (tools `search_transcript` and `query_metadata`), 7 RAGAS evaluation, 8 worker + multi-service compose, 9 README + CD to Render.
 
 ---
 
@@ -69,24 +70,24 @@
 
 ### 3.4 Migration steps (in order)
 - [x] 0. Create this `CLAUDE.md`.
-- [x] 1. Create `specs/constitution.md` (written by Marco with guiding questions from Claude). **Done 2026-11-16.** v1.0.0 adopted; v1.1.0 adds pinned stack versions (from the image; also pinned in `requirements.txt`, and torch in the `Dockerfile`); v2.0.0 switches to one issue/branch/PR per spec + CI gate (ADR `docs/decisions/0001-branch-per-spec-and-ci.md`); v3.0.0 (2026-11-17) redefines §5 Persistence (ADR 0002, see step 8).
-  - Still TODO in §1: sentence-transformers version (Phase 4) and LLM provider and model (after Marco's research).
+- [x] 1. Create `specs/constitution.md` (written by Marco with guiding questions from Claude). **Done 2026-11-16.** v1.0.0 adopted; v1.1.0 adds pinned stack versions (from the image; also pinned in `requirements.txt`, and torch in the `Dockerfile`); v2.0.0 switches to one issue/branch/PR per spec + CI gate (ADR `docs/decisions/0001-branch-per-spec-and-ci.md`); v3.0.0 (2026-11-17) redefines section 5 Persistence (ADR 0002, see step 8).
+  - Still TODO in section 1: sentence-transformers version (Phase 4) and LLM provider and model (after Marco's research).
   - Note: the local `.venv` (3.10.11) has different versions (e.g. FastAPI 0.142.2, SQLAlchemy 2.0.54) → recreate it with 3.11 from the pinned `requirements.txt`.
-  - Code that violates §5, to become Phase 2 tasks: `"soyadmin"` bypass (`app/main.py:138`), `verify_exp: False` (`:143`), JWT payload printed (`:144`), admin credentials as query params in `/register` (`:480`).
+  - Code that violates section 5, to become Phase 2 tasks: `"soyadmin"` bypass (`app/main.py:138`), `verify_exp: False` (`:143`), JWT payload printed (`:144`), admin credentials as query params in `/register` (`:480`).
   - Open risk: measure whether torch + Whisper tiny + MiniLM fit in 512 MB (propose it as one of the first Phase 3 tasks).
   - For the Phase 2 `tasks.md`: the testcontainers fixture must fail, not skip, when Docker isn't available.
 - [x] 2. Create `specs/000-vision.md`: goal, scope, non-goals. **Done 2026-11-16.** Problem/Solution split, goals, non-goals, success criteria, 9-phase roadmap (storage of transcriptions goes at the start of Phase 4). Risks to check in the Phase 8-9 specs: Render's free tier may not offer background workers, free Postgres has a limited lifetime, and Render doesn't run Docker Compose (Blueprint `render.yaml`).
-- [x] 3. Create `specs/001-data-model/spec.md`, retroactive. **Done 2026-11-17** (commit `6acad57`; Marco's draft, corrected and completed by Claude). Q2 and Q4 in §7 are left for `004-ingestion`. Gaps G1-G4 become tasks of `002`.
+- [x] 3. Create `specs/001-data-model/spec.md`, retroactive. **Done 2026-11-17** (commit `6acad57`; Marco's draft, corrected and completed by Claude). Q2 and Q4 in section 7 are left for `004-ingestion`. Gaps G1-G4 become tasks of `002`.
 - [ ] 4. Create `specs/002-postgres-pgvector/spec.md` and `tasks.md`, with the pending items from section 2 and gaps G1-G4 of spec 001 as tasks. **In progress (2026-11-17):** skeleton with `TODO`s and hints created by Claude; Marco fills it in next, then Claude does the clarify pass. No `plan.md` for this retroactive spec.
 - [ ] 5. Turn `razonamiento.md` into an ADR in `docs/decisions/` (next number: 0003) and decide what to do with `instrucciones.txt` (move what is still valid into `specs/`).
 - [ ] 6. Close Phase 2 following its `tasks.md`.
-- [ ] 7. Phase 3 — CI: `specs/003-ci/`. GitHub Actions running the suite on push/PR (testcontainers works on GitHub's Ubuntu runners), `requirements-dev.txt` (pytest, pytest-asyncio, httpx, jiwer, testcontainers), exclude/rewrite GPU tests in `tests/test_fastapi.py`. From here on, every spec = issue + branch + PR (constitution §4).
+- [ ] 7. Phase 3 — CI: `specs/003-ci/`. GitHub Actions running the suite on push/PR (testcontainers works on GitHub's Ubuntu runners), `requirements-dev.txt` (pytest, pytest-asyncio, httpx, jiwer, testcontainers), exclude/rewrite GPU tests in `tests/test_fastapi.py`. From here on, every spec = issue + branch + PR (constitution section 4).
 - [ ] 8. **Resume development**: Phase 4 (storage and ingestion) with the full flow: issue + branch `004-ingestion` → `spec.md` → clarify → `plan.md` → analyze → `tasks.md` → implement (test first, one commit per task) → update the spec → PR with green CI → merge.
   Decisions already made for the `004-ingestion` spec (NOT implemented yet):
   - 2026-11-16: `batch_transcription` gets the date+time the request was received.
   - 2026-11-17 (ADR `docs/decisions/0002-store-each-realtime-request.md`, commit `f57f946`): new table `RealTimeTranscription`, N:1 to `RealTimeSession`, with `id` (PK), `session_id` (FK), received date-time and Whisper's full output (segments included). `RealTimeSession` keeps only `session_id`, `username`, create and close dates (its JSON `transcription` and `exp_date` go away). **Each `/broadcast` writes its row immediately.**
   - Still open: inactivity expiry after a restart (derive it from the last received time?), replacing the in-memory token check with `username`, when ingestion runs (at close or per request), JSONB vs JSON, timestamptz in UTC, how embedding `start_time`/`end_time` relate to request times, bug `timedelta(RTSESSION_EXP)` = days in `/broadcast` (`app/main.py:234`).
-  - When 004 is done, update `001` and `docs/architecture.md` §2 (constitution §3).
+  - When 004 is done, update `001` and `docs/architecture.md` section 2 (constitution section 3).
 
 Target structure:
 ```

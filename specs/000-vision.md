@@ -28,18 +28,18 @@ How the pieces connect → `docs/architecture.md`. Rules → `specs/constitution
 ## 5. Non-goals (out of scope)
 - Fine-tuning.
 - Speaker diarization.
-- User data deletion (constitution §5).
+- User data deletion (constitution section 5).
 - Audio formats other than `.wav`.
 - A graphical frontend: the API, with its Swagger UI, is the interface.
-- Asking questions about a real-time session before it is closed. Each request is stored as it arrives (constitution §5), but embeddings are not created yet; `004-ingestion` decides whether this stays a non-goal (ADR 0002).
+- Asking questions about a real-time session before it is closed. Each request is stored as it arrives (constitution section 5), but embeddings are not created yet; `004-ingestion` decides whether this stays a non-goal (ADR 0002).
 
 ## 6. Success criteria
 - Answer quality is evaluated with RAGAS on a fixed set of questions about real transcriptions, and the results are published in the README. Target values are defined in the Phase 7 spec.
-- The system is deployed on Render's free tier (constitution §2), and a registered user can transcribe audio and ask questions about it there.
+- The system is deployed on Render's free tier (constitution section 2), and a registered user can transcribe audio and ask questions about it there.
 - Someone who has never seen the project can run it locally by following the README.
 
 ## 7. Roadmap
-Each phase has one spec folder, one GitHub issue, one branch and one pull request (constitution §4). Phases 1-2 were built before the SDD workflow; their specs are retroactive.
+Each phase has one spec folder, one GitHub issue, one branch and one pull request (constitution section 4). Phases 1-2 were built before the SDD workflow; their specs are retroactive.
 
 | Phase | Outcome | Spec |
 |---|---|---|

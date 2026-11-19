@@ -12,9 +12,9 @@
 
 ## 1. Context
 
-Phase 1 added the `RealTimeSession`, `BatchTranscription` and `TranscriptionEmbeddings` models (`app/models.py`). They give the system a place to keep transcriptions from both endpoints (real-time and batch), linked to the user who created them, and to keep the embeddings of transcription fragments, so that vector search can later give the LLM the parts of a transcription the user is asking about. This serves the first goal of `000-vision.md` §4 ("A user's transcriptions are stored") and prepares the `/ask` goal.
+Phase 1 added the `RealTimeSession`, `BatchTranscription` and `TranscriptionEmbeddings` models (`app/models.py`). They give the system a place to keep transcriptions from both endpoints (real-time and batch), linked to the user who created them, and to keep the embeddings of transcription fragments, so that vector search can later give the LLM the parts of a transcription the user is asking about. This serves the first goal of `000-vision.md` section 4 ("A user's transcriptions are stored") and prepares the `/ask` goal.
 
-This phase only defines the tables and their rules. Writing to them from the endpoints happens in Phase 4 (see §2).
+This phase only defines the tables and their rules. Writing to them from the endpoints happens in Phase 4 (see section 2).
 
 ## 2. Scope
 
@@ -32,7 +32,7 @@ This phase only defines the tables and their rules. Writing to them from the end
 | Start and close date+time of a real-time session | `004-ingestion` (decision of 2026-11-16) |
 | A new `RealTimeTranscription` model, one row per request with its received date+time and text | `004-ingestion`. Whether it is a table or a JSON list is still open. |
 | Received date+time of a batch request | `004-ingestion` |
-| Endpoints (`upload_archivo`, `cerrar_RTsession`) storing transcriptions and embeddings | `004-ingestion` (vision §7: "Storage and ingestion") |
+| Endpoints (`upload_archivo`, `cerrar_RTsession`) storing transcriptions and embeddings | `004-ingestion` (vision section 7: "Storage and ingestion") |
 
 ## 3. Entities
 
@@ -58,7 +58,7 @@ This phase only defines the tables and their rules. Writing to them from the end
 ### 3.3 Transcription embedding
 - **Represents:** the embedding of one fragment of a transcription, with the fragment's text and its `start_time`/`end_time`.
 - **Identified by:** `id`.
-- **Belongs to:** exactly one source, either a real-time session (`session_id`) or a batch transcription (`batch_id`). Through that source, it belongs to a user (constitution §5, Ownership).
+- **Belongs to:** exactly one source, either a real-time session (`session_id`) or a batch transcription (`batch_id`). Through that source, it belongs to a user (constitution section 5, Ownership).
 - **Rules:**
   - It has exactly one of `session_id` or `batch_id`: never both, never neither (`check_one_source`).
   - The embedding, `start_time`, `end_time` and `text` are required.
@@ -82,7 +82,7 @@ This phase only defines the tables and their rules. Writing to them from the end
 - **AC-2.4** WHEN an embedding is saved with only a `session_id`, THE SYSTEM SHALL store it.
 
 ### R3. Every session and batch belongs to an existing user
-**As** an admin, **I want** every session and batch to belong to a registered user, **so that** ownership (constitution §5) can always be checked and there is no data without an owner.
+**As** an admin, **I want** every session and batch to belong to a registered user, **so that** ownership (constitution section 5) can always be checked and there is no data without an owner.
 
 - **AC-3.1** IF a real-time session or batch transcription is saved with a `username` that does not exist, THEN THE SYSTEM SHALL reject it.
 
@@ -102,7 +102,7 @@ This phase only defines the tables and their rules. Writing to them from the end
 ## 6. Known gaps
 
 - **G1. The suite does not collect (checked 2026-11-17).** `tests/test_db.py` imports `app.models`, which imports `app.database`. At import time, that module raises an error if `POSTGRES_USERNAME`, `POSTGRES_PASSWORD` or `POSTGRES_DB` are missing, and it creates a Postgres engine, which needs `psycopg`. The local `.venv` (Python 3.10) doesn't have `psycopg`. So the tests can't use their own SQLite engine, even though they create one. → `002-postgres-pgvector` (testcontainers fixture) + recreate the `.venv` with 3.11.
-- **G2. Foreign keys are not enforced in the tests.** By default, SQLite doesn't check foreign keys ([SQLite docs, §2](https://www.sqlite.org/foreignkeys.html#fk_enable)), so `test_rt_session_usuario_inexistente` saves a session for a user who doesn't exist. Its `pytest.raises` is commented out, so it checks nothing. → `002-postgres-pgvector`: run it against Postgres and restore the `pytest.raises(IntegrityError)`.
+- **G2. Foreign keys are not enforced in the tests.** By default, SQLite doesn't check foreign keys ([SQLite docs, section 2](https://www.sqlite.org/foreignkeys.html#fk_enable)), so `test_rt_session_usuario_inexistente` saves a session for a user who doesn't exist. Its `pytest.raises` is commented out, so it checks nothing. → `002-postgres-pgvector`: run it against Postgres and restore the `pytest.raises(IntegrityError)`.
 - **G3. AC-1.3 (duplicate ids) has no test.** → `002-postgres-pgvector`.
 - **G4. The embedding tests use `"asdfg"` as the embedding.** That isn't a 384-dimension vector, and pgvector will reject it. → `002-postgres-pgvector`: use a valid vector of length 384.
 
@@ -111,4 +111,4 @@ This phase only defines the tables and their rules. Writing to them from the end
 - **Q1.** `rt_session.exp_date` defaults to the creation time. Is it an expiry date or a start date? → **Answered 2026-11-17:** it is removed and replaced by create and close dates in `004-ingestion` (ADR 0002).
 - **Q2.** What unit do the embedding's `start_time`/`end_time` use (seconds? milliseconds?), and how do they relate to the request times decided on 2026-11-16? → `004-ingestion`.
 - **Q3.** If `004-ingestion` adds a `RealTimeTranscription` table, does the JSON `transcription` column on `rt_session` stay? → **Answered 2026-11-17:** no, it is removed (ADR 0002).
-- **Q4.** The dimension 384 comes from the planned embedding model (MiniLM). Should the constitution record it, together with the sentence-transformers version (§1 TODO), so that this spec and `004-ingestion` follow it?
+- **Q4.** The dimension 384 comes from the planned embedding model (MiniLM). Should the constitution record it, together with the sentence-transformers version (section 1 TODO), so that this spec and `004-ingestion` follow it? **Answered 2026-11-19:** Yes, the constitution should record the transformer version and the vector dimension. Future changes will need to create a ADR.

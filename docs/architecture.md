@@ -86,4 +86,4 @@ A LangGraph agent wraps the question pipeline as tools:
 | Transcript text: retrieved chunks + the question | **Yes** | External LLM provider |
 | Credentials and secrets | No | — |
 
-This must be stated in the README and in the `/ask` endpoint description (constitution §5).
+This must be stated in the README and in the `/ask` endpoint description (constitution section 5).

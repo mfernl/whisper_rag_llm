@@ -55,13 +55,13 @@ Exact versions are pinned in `requirements.txt` (and torch also in the `Dockerfi
 - **Retention.** Transcriptions and their embeddings are kept in the database. Users cannot delete them; deletion is not a feature.
 - **Upload limits.** Every audio upload is restricted by format (only `.wav`), maximum size per request and maximum amount of audio per user. The limits are stated in the endpoint description; their values are defined in the feature specs, not here.
 - **Limit errors.** Exceeding a limit returns a clear error: 413 for size, 429 or 403 for quota (exact code chosen in the feature spec), and nothing is stored.
-- See `docs/architecture.md` §6 for what data leaves the server.
+- See `docs/architecture.md` section 6 for what data leaves the server.
 
 ## 6. Governance
 - **Precedence.** This constitution overrides every spec, plan and task. If a spec contradicts it, the spec is wrong: either the spec is fixed, or the constitution is amended first through this section. There are no silent exceptions.
 - **Versioning.** The version follows semantic versioning:
   - MAJOR: a rule is removed or redefined in a way that can make existing specs non-compliant.
-  - MINOR: a rule or section is added, or an existing one is materially expanded (e.g. filling a TODO in §1).
+  - MINOR: a rule or section is added, or an existing one is materially expanded (e.g. filling a TODO in section 1).
   - PATCH: wording, typos or clarifications that do not change meaning.
 - **Process.** Every amendment goes in its own `docs:` commit that updates the version and date at the top of this file. A MAJOR amendment also needs a decision record in `docs/decisions/` explaining why.
 - **Ripple effect.** An amendment is done only when every affected spec has been updated to comply, in the same change.
