@@ -14,7 +14,7 @@
 
 Phase 1 added the `RealTimeSession`, `BatchTranscription` and `TranscriptionEmbeddings` models (`app/models.py`). They give the system a place to keep transcriptions from both endpoints (real-time and batch), linked to the user who created them, and to keep the embeddings of transcription fragments, so that vector search can later give the LLM the parts of a transcription the user is asking about. This serves the first goal of `000-vision.md` section 4 ("A user's transcriptions are stored") and prepares the `/ask` goal.
 
-This phase only defines the tables and their rules. Writing to them from the endpoints happens in Phase 4 (see section 2).
+This phase only defines the tables and their rules. Writing to them from the endpoints happens in Phase 5 (see section 2).
 
 ## 2. Scope
 
@@ -29,10 +29,10 @@ This phase only defines the tables and their rules. Writing to them from the end
 | `Admin`, `User` | Not specified yet: they come from Transcript_whisper. `User` is only referenced here, as the owner of sessions and batches. |
 | `IWord`, `WordDetectionLog` | Not specified yet (important-word detection, inherited feature). |
 | PostgreSQL, pgvector, Alembic | `002-postgres-pgvector` |
-| Start and close date+time of a real-time session | `004-ingestion` (decision of 2026-11-16) |
-| A new `RealTimeTranscription` model, one row per request with its received date+time and text | `004-ingestion`. Whether it is a table or a JSON list is still open. |
-| Received date+time of a batch request | `004-ingestion` |
-| Endpoints (`upload_archivo`, `cerrar_RTsession`) storing transcriptions and embeddings | `004-ingestion` (vision section 7: "Storage and ingestion") |
+| Start and close date+time of a real-time session | `005-ingestion` (decision of 2026-11-16) |
+| A new `RealTimeTranscription` model, one row per request with its received date+time and text | `005-ingestion`. Whether it is a table or a JSON list is still open. |
+| Received date+time of a batch request | `005-ingestion` |
+| Endpoints (`upload_archivo`, `cerrar_RTsession`) storing transcriptions and embeddings | `005-ingestion` (vision section 7: "Storage and ingestion") |
 
 ## 3. Entities
 
@@ -108,7 +108,7 @@ This phase only defines the tables and their rules. Writing to them from the end
 
 ## 7. Open questions
 
-- **Q1.** `rt_session.exp_date` defaults to the creation time. Is it an expiry date or a start date? → **Answered 2026-11-17:** it is removed and replaced by create and close dates in `004-ingestion` (ADR 0002).
-- **Q2.** What unit do the embedding's `start_time`/`end_time` use (seconds? milliseconds?), and how do they relate to the request times decided on 2026-11-16? → `004-ingestion`.
-- **Q3.** If `004-ingestion` adds a `RealTimeTranscription` table, does the JSON `transcription` column on `rt_session` stay? → **Answered 2026-11-17:** no, it is removed (ADR 0002).
-- **Q4.** The dimension 384 comes from the planned embedding model (MiniLM). Should the constitution record it, together with the sentence-transformers version (section 1 TODO), so that this spec and `004-ingestion` follow it? **Answered 2026-11-19:** Yes, the constitution should record the transformer version and the vector dimension. Future changes will need to create a ADR.
+- **Q1.** `rt_session.exp_date` defaults to the creation time. Is it an expiry date or a start date? → **Answered 2026-11-17:** it is removed and replaced by create and close dates in `005-ingestion` (ADR 0002).
+- **Q2.** What unit do the embedding's `start_time`/`end_time` use (seconds? milliseconds?), and how do they relate to the request times decided on 2026-11-16? → `005-ingestion`.
+- **Q3.** If `005-ingestion` adds a `RealTimeTranscription` table, does the JSON `transcription` column on `rt_session` stay? → **Answered 2026-11-17:** no, it is removed (ADR 0002).
+- **Q4.** The dimension 384 comes from the planned embedding model (MiniLM). Should the constitution record it, together with the sentence-transformers version (section 1 TODO), so that this spec and `005-ingestion` follow it? **Answered 2026-11-19:** Yes, the constitution should record the transformer version and the vector dimension. Future changes will need to create a ADR.

@@ -13,13 +13,13 @@ Each part is labelled **[current]** (already in the code), **[decided]** (agreed
 
 | Component | Role | Status |
 |---|---|---|
-| API (FastAPI + Uvicorn) | Auth, upload/real-time endpoints, `/ask` | [current] / `/ask` [planned, Phase 5] |
+| API (FastAPI + Uvicorn) | Auth, upload/real-time endpoints, `/ask` | [current] / `/ask` [planned, Phase 6] |
 | Whisper `tiny` (in-process, CPU) | Audio → text with timestamps | [current] |
-| MiniLM `all-MiniLM-L6-v2` (in-process) | Text → 384-dim vector | [planned, Phase 4] |
+| MiniLM `all-MiniLM-L6-v2` (in-process) | Text → 384-dim vector | [planned, Phase 5] |
 | PostgreSQL + pgvector | Users, transcriptions, chunks and their vectors | [current] schema · data writes [decided] |
-| External LLM (API) | Writes the answer from the retrieved text | [planned, Phase 5] |
-| LangGraph agent | Picks between vector search and metadata (SQL) queries | [planned, Phase 6] |
-| Worker | Moves transcription/ingestion off the request path | [planned, Phase 8] |
+| External LLM (API) | Writes the answer from the retrieved text | [planned, Phase 6] |
+| LangGraph agent | Picks between vector search and metadata (SQL) queries | [planned, Phase 7] |
+| Worker | Moves transcription/ingestion off the request path | [planned, Phase 9] |
 
 ---
 
@@ -35,12 +35,12 @@ Each part is labelled **[current]** (already in the code), **[decided]** (agreed
 
 **Real-time** — `/crearRTsession` → `/broadcast` (chunks) → `/cerrarRTsession`
 - [current] Partial transcriptions are kept in an in-memory dict (`sesiones`) and are lost on restart.
-- [decided] `rt_session` stores the owner's `username` and the session's **create and close date and time**. Each `/broadcast` request is stored **as soon as it is transcribed** as a row of a new table `RealTimeTranscription` (N:1 to `rt_session`): the **date and time it was received** and Whisper's full output, segments included. See ADR `docs/decisions/0002-store-each-realtime-request.md`. [planned, Phase 4]
+- [decided] `rt_session` stores the owner's `username` and the session's **create and close date and time**. Each `/broadcast` request is stored **as soon as it is transcribed** as a row of a new table `RealTimeTranscription` (N:1 to `rt_session`): the **date and time it was received** and Whisper's full output, segments included. See ADR `docs/decisions/0002-store-each-realtime-request.md`. [planned, Phase 5]
 - Real time of a segment ≈ the request's received time + the segment's `start` offset (Whisper's offsets count from the start of that chunk).
 
 ---
 
-## 3. Ingestion pipeline (Phase 4) [planned]
+## 3. Ingestion pipeline (Phase 5) [planned]
 Runs once per stored transcription.
 ```
 transcription (JSON with segments + timestamps)
@@ -54,7 +54,7 @@ transcription (JSON with segments + timestamps)
 
 ---
 
-## 4. Question pipeline — `/ask` (Phase 5) [planned]
+## 4. Question pipeline — `/ask` (Phase 6) [planned]
 Runs on every question. This is RAG: a retriever selects relevant passages and only those go to the generator ([Lewis et al., 2020](https://arxiv.org/abs/2005.11401)).
 ```
 question
@@ -70,7 +70,7 @@ question
 
 ---
 
-## 5. Agent (Phase 6) [planned]
+## 5. Agent (Phase 7) [planned]
 A LangGraph agent wraps the question pipeline as tools:
 - `search_transcript`: the vector search from section 4.
 - `query_metadata`: SQL over transcription metadata (dates, context labels…).

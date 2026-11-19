@@ -31,10 +31,10 @@ How the pieces connect → `docs/architecture.md`. Rules → `specs/constitution
 - User data deletion (constitution section 5).
 - Audio formats other than `.wav`.
 - A graphical frontend: the API, with its Swagger UI, is the interface.
-- Asking questions about a real-time session before it is closed. Each request is stored as it arrives (constitution section 5), but embeddings are not created yet; `004-ingestion` decides whether this stays a non-goal (ADR 0002).
+- Asking questions about a real-time session before it is closed. Each request is stored as it arrives (constitution section 5), but embeddings are not created yet; `005-ingestion` decides whether this stays a non-goal (ADR 0002).
 
 ## 6. Success criteria
-- Answer quality is evaluated with RAGAS on a fixed set of questions about real transcriptions, and the results are published in the README. Target values are defined in the Phase 7 spec.
+- Answer quality is evaluated with RAGAS on a fixed set of questions about real transcriptions, and the results are published in the README. Target values are defined in the Phase 8 spec.
 - The system is deployed on Render's free tier (constitution section 2), and a registered user can transcribe audio and ask questions about it there.
 - Someone who has never seen the project can run it locally by following the README.
 
@@ -45,10 +45,11 @@ Each phase has one spec folder, one GitHub issue, one branch and one pull reques
 |---|---|---|
 | 1 | Data model for transcriptions and embeddings *(retroactive)* | `specs/001-data-model/` |
 | 2 | PostgreSQL + pgvector + migrations *(retroactive)* | `specs/002-postgres-pgvector/` |
-| 3 | CI: the test suite runs on GitHub Actions on every push and pull request | `specs/003-ci/` |
-| 4 | Storage and ingestion: transcriptions are stored per user, then chunked and embedded | `specs/004-ingestion/` |
-| 5 | `/ask`: answers with cited fragments and timestamps | `specs/005-ask/` |
-| 6 | Agent combining transcript search and metadata queries | `specs/006-agent/` |
-| 7 | Answer quality evaluated with RAGAS | `specs/007-evaluation/` |
-| 8 | Worker + multi-service Docker Compose | `specs/008-worker/` |
-| 9 | README + continuous deployment to Render | `specs/009-readme-cd/` |
+| 3 | Security fixes: remove code that breaks constitution section 5 (admin bypass, disabled token expiry checks, tokens printed to logs, admin credentials in the URL) | `specs/003-security-fixes/` |
+| 4 | CI: the test suite runs on GitHub Actions on every push and pull request | `specs/004-ci/` |
+| 5 | Storage and ingestion: transcriptions are stored per user, then chunked and embedded | `specs/005-ingestion/` |
+| 6 | `/ask`: answers with cited fragments and timestamps | `specs/006-ask/` |
+| 7 | Agent combining transcript search and metadata queries | `specs/007-agent/` |
+| 8 | Answer quality evaluated with RAGAS | `specs/008-evaluation/` |
+| 9 | Worker + multi-service Docker Compose | `specs/009-worker/` |
+| 10 | README + continuous deployment to Render | `specs/010-readme-cd/` |
