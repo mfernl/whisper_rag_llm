@@ -1,0 +1,11 @@
+# Test-only dependencies (spec 002 T2), pinned on 2026-11-20. Never installed by the Dockerfile.
+# Keep in sync with specs/constitution.md section 1 (changing a version there is a constitution amendment).
+# Install with: python -m pip install -r requirements-dev.txt
+-r requirements.txt
+
+# The [postgres] extra adds no packages (the driver, psycopg, comes from requirements.txt),
+# but it is the install form the testcontainers docs give for the Postgres module.
+testcontainers[postgres]==4.15.0
+pytest==9.2.0
+pytest-asyncio==1.5.0
+httpx==0.28.1

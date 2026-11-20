@@ -36,10 +36,21 @@
 ### T2. Add the test-only dependencies
 - **Closes:** prepares AC-5.1.
 - **Depends on:** T1.
-- **Steps:** TODO
-  > Guiding questions: `testcontainers` is needed now, but `requirements-dev.txt` was planned for `004-ci`. Do you create the file here, in 002, and let 004 only use it? Should its versions be pinned like `requirements.txt` (constitution section 1)?
-- **Done when:** TODO
-- **Commit:** TODO
+- **Steps:** 
+  - Create `requirements-dev.txt` (the name planned in ADR 0001) with `-r requirements.txt` as its first line, so one install sets up the whole `.venv`. Test-only packages stay out of `requirements.txt` because the Dockerfile installs that file into the production image.
+  - Add what the tests import that `requirements.txt` doesn't have: `testcontainers[postgres]`, `pytest`, `pytest-asyncio`, `httpx` (`jiwer` already comes through `-r`).
+  - Pin each one with `==` (latest from `python -m pip index versions <package>`): testcontainers 4.15.0, pytest 9.2.0, pytest-asyncio 1.5.0, httpx 0.28.1.
+  - Amend the constitution: the test pins go in the section 1 table, like the runtime ones (v3.3.0, its own `docs:` commit, section 6).
+  - Reinstall: `py -m pip install -r requirements-dev.txt`
+  - Note for T6: in testcontainers 4.15.0, `testcontainers.postgres` is deprecated; import from `testcontainers.community.postgres`.
+- **Done when:**
+  - `python -m pip install -r requirements-dev.txt --dry-run` shows no "Would install" line, which means every pin is already satisfied.
+  - `python -m pip check` prints "No broken requirements found.".
+  - `python -W error -c "from testcontainers.community.postgres import PostgresContainer"` runs with no error and no warning.
+  - `python -m pytest --version` prints `pytest 9.2.0`.
+- **Commit:**
+  - `docs: amend constitution to v3.3.0 (pin test-only dependencies)`
+  - `build: add pinned test-only dependencies in requirements-dev.txt`
 
 ## Block B: make the database settings testable (G7, G8)
 
