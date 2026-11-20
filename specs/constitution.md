@@ -1,5 +1,5 @@
 # Constitution — whisper_rag_llm
-Version: 3.2.0 · Date: 2026-11-20
+Version: 3.3.0 · Date: 2026-11-20
 
 ## 1. Fixed stack
 Changing any of these elements requires opening a decision record (ADR) in `docs/decisions/`.
@@ -14,8 +14,9 @@ Changing any of these elements requires opening a decision record (ADR) in `docs
 | Embeddings | sentence-transformers with `all-MiniLM-L6-v2` (dimension 384 → `Vector(384)` column) | TODO: pin when added in Phase 5 (ingestion) |
 | Authentication | python-jose + bcrypt | python-jose 3.5.0 · bcrypt 5.0.0 |
 | Packaging | Docker + Docker Compose | — |
+| Testing (not in the image) | pytest + pytest-asyncio + httpx + testcontainers-python | pytest 9.2.0 · pytest-asyncio 1.5.0 · httpx 0.28.1 · testcontainers 4.15.0 |
 
-Exact versions are pinned in `requirements.txt` (and torch also in the `Dockerfile`). This table and those files must always match.
+Exact versions are pinned in `requirements.txt` (and torch also in the `Dockerfile`); test-only ones in `requirements-dev.txt`, which the Dockerfile does not install. This table and those files must always match.
 
 **LLM (Phases 6 and 7):** called through an external API. Provider and model version: TODO — to be decided after research, and recorded in this table once chosen.
 
