@@ -1,7 +1,8 @@
 # 002 — Tasks
 
 - **Spec:** `specs/002-postgres-pgvector/spec.md`
-- **Last updated:** 2026-11-19
+- **Issue:** #1 · **Branch:** `002-postgres-pgvector` (the pull request says `Closes #1`)
+- **Last updated:** 2026-11-20
 
 > Rules (constitution sections 3 and 4): one commit per task, test first where there is a test, and each task names the gap (G) and criterion (AC) it closes.
 > A task is small enough for one session. If one grows, split it.
@@ -21,10 +22,16 @@
 ### T1. Recreate the `.venv` with Python 3.11
 - **Closes:** part of G1 (spec 001: the local `.venv` is 3.10 and has no `psycopg`).
 - **Depends on:** nothing.
-- **Steps:** TODO
-  > Hint: CLAUDE.md section 1 already decided this. Where do the pinned versions come from?
-- **Done when:** `python --version` prints `3.11.x`.
-- **Commit:** none (the `.venv` is not in git). Why is this still a task? We need the environment to be the same as production to test against a throwaway database to ensure the changes we do work in production.
+- **Steps:** 
+  - Install python3.11.9 (the last version with windows installer 64x)
+  - Create the venv (py -3.11 -m venv .venv)
+  - .venv\Scripts\activate
+  - Install requirements from requirements.txt (py -m pip install -r requirements.txt)
+- **Done when:** 
+  - python --version prints Python 3.11.9.
+  - python -m pip install -r requirements.txt --dry-run shows no "Would install" line, which means every pin is already satisfied.
+  - python -m pip check prints "No broken requirements found.".
+- **Commit:** none (the `.venv` is not in git). Why is this still a task? T1 closes part of G1: the tests can't even be collected without psycopg.
 
 ### T2. Add the test-only dependencies
 - **Closes:** prepares AC-5.1.
