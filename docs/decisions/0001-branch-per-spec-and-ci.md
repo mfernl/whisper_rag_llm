@@ -17,5 +17,5 @@
 ## Consequences
 - The roadmap in `specs/000-vision.md` section 6 is renumbered: 3 CI, 4 ingestion, 5 `/ask`, 6 agent, 7 evaluation, 8 worker, 9 README + CD.
 - Phase 3 must deal with tests that cannot run on GitHub's CPU-only runners (`tests/test_fastapi.py` uses `torch.cuda`) and add a `requirements-dev.txt` for test-only dependencies.
-- Until Phase 3 is done, direct commits to `main` are still allowed.
+- Until Phase 3 is done, direct commits to `main` are still allowed. *Superseded on 2026-11-20 (constitution v3.2.0): the issue/branch/PR rule now applies from spec 002 on, before CI exists. Why: spec 002 refactors `app/database.py` and the test fixtures, and a branch keeps `main` working until the whole spec is done; it also groups the spec's commits under one issue and practises the workflow before Phase 4 adds the CI gate. (Phase numbers here are pre-v3.1.0: CI is now Phase 4.)*
 - Branch-per-spec is our own judgment for a solo project; if collaborators join, revisit branch-per-task or required reviews.

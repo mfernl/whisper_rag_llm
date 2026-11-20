@@ -1,5 +1,5 @@
 # Constitution — whisper_rag_llm
-Version: 3.1.0 · Date: 2026-11-19
+Version: 3.2.0 · Date: 2026-11-20
 
 ## 1. Fixed stack
 Changing any of these elements requires opening a decision record (ADR) in `docs/decisions/`.
@@ -41,7 +41,7 @@ Exact versions are pinned in `requirements.txt` (and torch also in the `Dockerfi
 - Every migration has a message (and so a filename) that describes what it creates or changes, e.g. `alembic revision -m "add realtime_transcription table"`.
 - Language: everything in English (code, commits, specs, migration names and documentation) from 2026-11-16 on.
 - Issues, branches and pull requests: one GitHub issue, one branch and one pull request **per spec**, with one commit per task inside that branch. The branch is named like the spec folder (`NNN-name`), and the pull request closes the issue (`Closes #N`). See `docs/decisions/0001-branch-per-spec-and-ci.md`.
-  - This applies from the CI phase (Phase 4) on. Until then, direct commits to `main`.
+  - This applies from spec `002-postgres-pgvector` on (adopted 2026-11-20). Until CI exists (Phase 4), the pull request is merged once the whole suite passes locally (section 3); from then on, the CI gate in section 3 also applies.
   - Trivial changes that belong to no spec (typos, docs wording) may be committed directly to `main`; CI still runs on the push.
 - Specs structure: `specs/constitution.md`, `specs/000-vision.md` and one folder per feature or phase: `specs/NNN-name/{spec.md, plan.md, tasks.md}`. Decision records go in `docs/decisions/`.
 
