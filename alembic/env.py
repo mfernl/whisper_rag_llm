@@ -13,7 +13,12 @@ from pgvector.sqlalchemy import Vector
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-config.set_main_option('sqlalchemy.url', pg_uri)
+# pg_uri is a sqlalchemy URL object: str() would hide the password as ***.
+# '%' is doubled because Alembic's config uses ConfigParser interpolation.
+config.set_main_option(
+    'sqlalchemy.url',
+    pg_uri.render_as_string(hide_password=False).replace('%', '%%'),
+)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

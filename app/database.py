@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
@@ -17,11 +17,22 @@ if not dbn:
 if errores:
     raise RuntimeError("\n".join(errores)) # la app no arranca sin la configuración de la BD
 
-pg_uri = f"postgresql+psycopg://{uname}:{pssw}@db/{dbn}"
+# Host and port are not secrets: they default to the compose service, so an existing .env keeps working.
+# Outside compose (alembic from cmd, testcontainers) override them, e.g. POSTGRES_HOST=127.0.0.1.
+host = os.getenv("POSTGRES_HOST", "db")
+port = int(os.getenv("POSTGRES_PORT", "5432"))
 
-# 'sqlite:///./transcription.db'
+# URL.create escapes special characters (@ / :) in the password for us.
+pg_uri = URL.create(
+    drivername="postgresql+psycopg",
+    username=uname,
+    password=pssw,
+    host=host,
+    port=port,
+    database=dbn,
+)
 
-engine = create_engine(pg_uri) # postgres database on another container
+engine = create_engine(pg_uri)
 
 SessionLocal = sessionmaker(bind=engine)
 

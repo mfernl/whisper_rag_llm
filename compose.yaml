@@ -35,6 +35,8 @@ services:
     env_file:
       - .env
     restart: always
+    ports:
+      - 127.0.0.1:5432:5432 # only reachable from this machine (alembic, psql, tests from outside compose)
     volumes:
       - db-data:/var/lib/postgresql
     environment:

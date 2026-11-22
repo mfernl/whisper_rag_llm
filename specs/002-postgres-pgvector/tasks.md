@@ -59,10 +59,14 @@
 ### T3. Read the connection URL (or host and port) from settings
 - **Closes:** G8.
 - **Depends on:** T1.
-- **Steps:** TODO
-  > Guiding questions: one variable with the whole URL, or separate host and port? What default keeps `docker compose up` working without editing `.env`? Is `.env` the only file to change? (Remember `.env` is not in git: who else needs to know the new variable?)
-- **Done when:** TODO (e.g. the API still connects inside compose, and `alembic current` works from outside compose with TODO).
-- **Commit:** TODO
+- **Steps:**
+  - In `app/database.py`, read `POSTGRES_HOST` (default `db`) and `POSTGRES_PORT` (default `5432`).
+  - Build the URL with `sqlalchemy.URL.create`, which escapes special characters in the password.
+  - In `compose.yaml`, publish the `db` port on `127.0.0.1:5432:5432` only.
+- **Done when:**
+  - `docker compose up` with the current `.env` unchanged: the API starts and `/docs` loads.
+  - In cmd, with the `.venv` active and the `POSTGRES_*` variables set plus `set POSTGRES_HOST=127.0.0.1`: `alembic current` prints the revision instead of a "could not translate host name" error.
+- **Commit:** `feat(db): read database host and port from settings`
 
 ### T4. Split `app/database.py` so the models import without a database
 - **Closes:** G7, and the import part of G1.
