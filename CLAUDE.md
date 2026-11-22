@@ -1,7 +1,7 @@
 # CLAUDE.md — whisper_rag_llm
 
 > Claude Code loads this file at the start of every session. It explains **how we work** and **where to pick up**.
-> Last updated: 2026-11-19.
+> Last updated: 2026-11-22.
 
 ---
 
@@ -80,7 +80,7 @@
 - [x] 3. Create `specs/001-data-model/spec.md`, retroactive. **Done 2026-11-17** (commit `6acad57`; Marco's draft, corrected and completed by Claude). Q2 and Q4 in section 7 are left for `005-ingestion`. Gaps G1-G4 become tasks of `002`.
 - [x] 4. Create `specs/002-postgres-pgvector/spec.md` and `tasks.md`, with the pending items from section 2 and gaps G1-G4 of spec 001 as tasks. **In progress (2026-11-19):** `spec.md` filled in by Marco, Q1-Q5 answered (gaps G11 rename the migration, G12 `downgrade()` drops `vector`). Spec committed (`afc129f`, constitution v3.1.0 in `0feadc0`). `tasks.md` skeleton (T1-T18, blocks A-E, with `TODO`s and hints) created by Claude on 2026-11-19, **not committed yet**. Decided 2026-11-20: issue #1, branch `002-postgres-pgvector` (pushed); commit the skeleton on that branch after Claude's analyze pass on `Closes`/`Depends on` (every gap and AC has a task, the order works); then fill in each task's TODOs just before doing it, and commit the `tasks.md` update together with that task. No `plan.md` for this retroactive spec.
 - [ ] 5. Turn `razonamiento.md` into an ADR in `docs/decisions/` (next number: 0003) and decide what to do with `instrucciones.txt` (move what is still valid into `specs/`).
-- [ ] 6. Close Phase 2 following its `tasks.md`. **In progress:** skeleton committed 2026-11-20 (`d473c13`) on branch `002-postgres-pgvector`, issue #1. Done: T1 (`.venv` with Python 3.11.9, `0f60e28`), T2 (`requirements-dev.txt`, `b38c315`; constitution v3.3.0 in `7787cde`). **Next: T3** (connection settings, G8), starting from its guiding questions.
+- [ ] 6. Close Phase 2 following its `tasks.md`. **In progress:** skeleton committed 2026-11-20 (`d473c13`) on branch `002-postgres-pgvector`, issue #1. Done: T1 (`.venv` with Python 3.11.9, `0f60e28`), T2 (`requirements-dev.txt`, `b38c315`; constitution v3.3.0 in `7787cde`), T3 (`POSTGRES_HOST`/`POSTGRES_PORT` with defaults `db:5432`, `URL.create`, db port published on `127.0.0.1:5432`, `ebff75e`; written by Claude at Marco's request, overriding the mentoring rule for this task only). Outside compose use `POSTGRES_HOST=127.0.0.1`, not `localhost` (`::1` is tried first and hangs). `alembic current` from outside showed `e6edc15da35a (head)`, so pending item 1 in section 2 is answered: the migration is applied. Marco decided not to have a `.env.example`. **Next: T4** (split `app/database.py`, G7), starting from its guiding questions.
 - [ ] 7. Phase 3 — security fixes: `specs/003-security-fixes/` (spec 002 gap G10). Issue + branch `003-security-fixes` + PR (constitution v3.2.0 section 4; no CI gate yet).
 - [ ] 8. Phase 4 — CI: `specs/004-ci/`. GitHub Actions running the suite on push/PR (testcontainers works on GitHub's Ubuntu runners), install `requirements-dev.txt` (created and pinned in spec 002 T2; constitution v3.3.0), exclude/rewrite GPU tests in `tests/test_fastapi.py`. From here on, PRs also need green CI to merge (constitution section 3).
 - [ ] 9. **Resume development**: Phase 5 (storage and ingestion) with the full flow: issue + branch `005-ingestion` → `spec.md` → clarify → `plan.md` → analyze → `tasks.md` → implement (test first, one commit per task) → update the spec → PR with green CI → merge.
