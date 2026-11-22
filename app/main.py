@@ -17,7 +17,7 @@ from queue import Queue
 from threading import Thread
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-from app.database import get_db, Base, engine, SessionLocal
+from app.database import get_db, SessionLocal, get_engine
 from app.models import User, Admin, IWord, WordDetectionLog
 from app.security import hash_password, verify_password
 import csv
@@ -67,6 +67,7 @@ transcription_queue = Queue() #cola para manejar todas las peticiones
 
 @asynccontextmanager #al iniciar la aplicación se ejecuta hasta yield, y justo antes de cerrar se ejecuta el resto
 async def lifespan(app: FastAPI):
+    get_engine()
     db = SessionLocal()
     load_iwords(db)
     existingAdmin = db.query(Admin).filter_by(username = ADMIN_USERNAME).first()

@@ -71,10 +71,18 @@
 ### T4. Split `app/database.py` so the models import without a database
 - **Closes:** G7, and the import part of G1.
 - **Depends on:** T3.
-- **Steps:** TODO
-  > Guiding question: which of its four jobs (read settings, build the URI, create the engine, define `Base`) must happen at import time, and which can wait until something asks for an engine? Which SOLID principle does this fix? See the design pattern rule in CLAUDE.md section 1: is there a pattern that fits here, or is a plain function enough?
-- **Done when:** `python -m pytest --collect-only tests/test_db.py` collects the tests with no `POSTGRES_*` variables set.
-- **Commit:** TODO
+- **Background:** what `Base`, the engine, `SessionLocal` and `get_db` are, and why a lazy singleton: `docs/architecture.md` section 7.
+- **Steps:**
+  - Move `Base` to `app/models.py`, because defining it is the only one of the four jobs that needs no settings. Import it from there in `alembic/env.py`, `tests/test_db.py` and `tests/test_fastapi.py`.
+  - In `app/database.py`, move "read settings → check them → build the URL → create the engine" into `get_engine()`. It is a lazy singleton: the first call builds the engine and keeps it in the private module variable `_engine`, and later calls return the same engine. A plain function is enough; a `Singleton` class would add code without adding behaviour.
+  - Create `SessionLocal = sessionmaker()` with no bind at import time, and bind it inside `get_engine()` with `SessionLocal.configure(bind=_engine)`.
+  - Call `get_engine()` first thing in `lifespan` (`app/main.py`), so the engine exists before the first `SessionLocal()` and a missing variable still stops the app at startup (AC-3.1). `alembic/env.py` takes the URL from `get_engine().url`.
+  - SOLID: this fixes the Single Responsibility Principle. `models.py` changes when a table changes, and `database.py` changes when the way we connect changes.
+- **Done when:**
+  - `python -m pytest --collect-only tests/test_db.py` collects the 6 tests with no `POSTGRES_*` variables set.
+  - `docker compose up`: the API logs `Application startup complete` and `/docs` loads.
+  - In cmd, with the `POSTGRES_*` variables set plus `set POSTGRES_HOST=127.0.0.1`: `alembic current` prints `e6edc15da35a (head)`.
+- **Commit:** `refactor(db): create the engine lazily and move Base to models`
 
 ### T5. Test AC-3.1 (missing settings)
 - **Closes:** G9, AC-3.1.
@@ -101,6 +109,7 @@
 - **Depends on:** T6.
 - **Steps:** TODO
   > Hint: delete the old SQLite `db_session` fixture in `tests/test_db.py`. Which tests fail now, and why? Write the reasons down, because T8-T10 fix them.
+  > Note (from T4, 2026-11-22): after T4, `tests/test_fastapi.py` can't even be collected. `Base.metadata.create_all(bind=engine)` (line 24) uses an `engine` that `app.database` no longer exports (`NameError`), and lines 24-27 open a session at **import time**. Move that setup into the T6 fixture (a test DB, not the real one) and remove the module-level `engine`/`SessionLocal()` use, so the tests write to the container and not to the dev database.
 - **Done when:** TODO
 - **Commit:** TODO
 

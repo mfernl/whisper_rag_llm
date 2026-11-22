@@ -1,23 +1,21 @@
 from fastapi.testclient import TestClient
 from app.main import app
 import asyncio
-from io import BytesIO
-from fastapi import UploadFile
 import pytest
 from httpx import ASGITransport, AsyncClient
 import torch
-import pytest_asyncio
-from app.main import create_token, create_idRT, sesiones, transcription_queue
+from app.main import create_token, create_idRT, sesiones
 from datetime import datetime, timedelta, timezone
 from app.main import SECRET_KEY
-from jose import jwt, JWTError
+from jose import jwt
 from unittest.mock import patch
 import logging
 import statistics
 import os
 from jiwer import wer
-from app.models import User, Admin, IWord
-from app.database import SessionLocal, Base, engine
+from app.models import User, Admin
+from app.database import SessionLocal
+from app.models import Base
 from app.security import hash_password
 
 

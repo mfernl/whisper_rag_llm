@@ -1,6 +1,6 @@
 import pytest
 from app.models import User, RealTimeSession, BatchTranscription, TranscriptionEmbeddings
-from app.database import Base
+from app.models import Base
 from app.security import hash_password
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

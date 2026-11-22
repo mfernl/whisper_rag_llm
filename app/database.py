@@ -1,42 +1,49 @@
 from sqlalchemy import URL, create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker
 import os
 
-uname = os.getenv("POSTGRES_USERNAME")
-pssw = os.getenv("POSTGRES_PASSWORD")
-dbn = os.getenv("POSTGRES_DB")
+_engine = None
+SessionLocal = sessionmaker()
 
-errores = []
-if not uname:
-    errores.append("[ERR]: database username (POSTGRES_USERNAME) not found in .env file")
-if not pssw:
-    errores.append("[ERR]: database user password (POSTGRES_PASSWORD) not found in .env file")
-if not dbn:
-    errores.append("[ERR]: database name (POSTGRES_DB) not found in .env file")
+def get_engine():
+    global _engine
+    if _engine is None:
 
-if errores:
-    raise RuntimeError("\n".join(errores)) # la app no arranca sin la configuración de la BD
+        uname = os.getenv("POSTGRES_USERNAME")
+        pssw = os.getenv("POSTGRES_PASSWORD")
+        dbn = os.getenv("POSTGRES_DB")
 
-# Host and port are not secrets: they default to the compose service, so an existing .env keeps working.
-# Outside compose (alembic from cmd, testcontainers) override them, e.g. POSTGRES_HOST=127.0.0.1.
-host = os.getenv("POSTGRES_HOST", "db")
-port = int(os.getenv("POSTGRES_PORT", "5432"))
+        errores = []
+        if not uname:
+            errores.append("[ERR]: database username (POSTGRES_USERNAME) not found in .env file")
+        if not pssw:
+            errores.append("[ERR]: database user password (POSTGRES_PASSWORD) not found in .env file")
+        if not dbn:
+            errores.append("[ERR]: database name (POSTGRES_DB) not found in .env file")
 
-# URL.create escapes special characters (@ / :) in the password for us.
-pg_uri = URL.create(
-    drivername="postgresql+psycopg",
-    username=uname,
-    password=pssw,
-    host=host,
-    port=port,
-    database=dbn,
-)
+        if errores:
+            raise RuntimeError("\n".join(errores)) # la app no arranca sin la configuración de la BD
 
-engine = create_engine(pg_uri)
+        # Host and port are not secrets: they default to the compose service, so an existing .env keeps working.
+        # Outside compose (alembic from cmd, testcontainers) override them, e.g. POSTGRES_HOST=127.0.0.1.
+        host = os.getenv("POSTGRES_HOST", "db")
+        port = int(os.getenv("POSTGRES_PORT", "5432"))
 
-SessionLocal = sessionmaker(bind=engine)
+        # URL.create escapes special characters (@ / :) in the password for us.
+        pg_uri = URL.create(
+            drivername="postgresql+psycopg",
+            username=uname,
+            password=pssw,
+            host=host,
+            port=port,
+            database=dbn,
+        )
 
-Base = declarative_base()
+        _engine = create_engine(pg_uri)
+        SessionLocal.configure(bind=_engine)
+
+    return _engine
+
 
 def get_db():
     db = SessionLocal()

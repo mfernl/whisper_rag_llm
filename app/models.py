@@ -1,11 +1,12 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from datetime import datetime
-from app.database import Base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy_json import mutable_json_type
 from sqlalchemy import CheckConstraint
 from sqlalchemy import JSON
 from pgvector.sqlalchemy import Vector
+
+Base = declarative_base()
 
 class Admin(Base):
     __tablename__ = 'admins'

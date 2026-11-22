@@ -5,8 +5,10 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from app.database import Base, pg_uri
-import app.models
+from app.database import get_engine
+pg_uri = get_engine().url
+
+from app.models import Base
 
 from pgvector.sqlalchemy import Vector
 
