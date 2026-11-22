@@ -24,9 +24,9 @@
 - **Depends on:** nothing.
 - **Steps:** 
   - Install python3.11.9 (the last version with windows installer 64x)
-  - Create the venv (py -3.11 -m venv .venv)
-  - .venv\Scripts\activate
-  - Install requirements from requirements.txt (py -m pip install -r requirements.txt)
+  - Create the venv `py -3.11 -m venv .venv`.
+  - Activate the environment: `.venv\Scripts\activate`.
+  - Install requirements from requirements.txt `py -m pip install -r requirements.txt`.
 - **Done when:** 
   - python --version prints Python 3.11.9.
   - python -m pip install -r requirements.txt --dry-run shows no "Would install" line, which means every pin is already satisfied.
@@ -37,8 +37,8 @@
 - **Closes:** prepares AC-5.1.
 - **Depends on:** T1.
 - **Steps:** 
-  - Create `requirements-dev.txt` (the name planned in ADR 0001) with `-r requirements.txt` as its first line, so one install sets up the whole `.venv`. Test-only packages stay out of `requirements.txt` because the Dockerfile installs that file into the production image.
-  - Add what the tests import that `requirements.txt` doesn't have: `testcontainers[postgres]`, `pytest`, `pytest-asyncio`, `httpx` (`jiwer` already comes through `-r`).
+  - Create `requirements-dev.txt` (the name planned in ADR 0001) with `-r requirements.txt` as its first line, so one install sets up the whole `.venv`.
+  - Add what the tests import that `requirements.txt` doesn't have: `testcontainers[postgres]`, `pytest`, `pytest-asyncio`, `httpx`.
   - Pin each one with `==` (latest from `python -m pip index versions <package>`): testcontainers 4.15.0, pytest 9.2.0, pytest-asyncio 1.5.0, httpx 0.28.1.
   - Amend the constitution: the test pins go in the section 1 table, like the runtime ones (v3.3.0, its own `docs:` commit, section 6).
   - Reinstall: `py -m pip install -r requirements-dev.txt`
