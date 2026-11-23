@@ -97,8 +97,8 @@ The schema is managed with Alembic migrations instead of `Base.metadata.create_a
 | AC-2.3 | `test_check_alembic` | No test (2026-11-19) |
 | AC-3.1 | `test_missing_postgres_var` (one variable missing, parametrized) and `test_missing_postgres_variables` (all three missing) in `tests/test_db.py`, which call `get_engine()`; `lifespan` calls it first, so the same error stops the app (T4, T5) | Yes (2026-11-23): passes with the `POSTGRES_*` variables unset and set in the shell; the mutation check (dropping the `POSTGRES_DB` check) makes two cases fail |
 | AC-4.1 | Write a row, `docker compose down`, `up -d`: the row is still there. After `down -v` it is gone (expected). | Not checked (Docker not running, 2026-11-19) |
-| AC-5.1 | Testcontainers fixture in `tests/conftest.py` (not written yet) | No (G1, checked 2026-11-19) |
-| AC-5.2 | Stop Docker, run `python -m pytest -rs`: the database tests error, none is skipped | No: there is no fixture yet |
+| AC-5.1 | `pg_engine` and `db_session` fixtures in `conftest.py` (repo root, T6); `test_pgEngineSetup`: after `upgrade head` the container has the `models.py` tables plus `alembic_version` | Yes (2026-11-23): `python -m pytest -rs tests\test_db.py` with Docker on, 5 passed, 6 skipped (the T7 model tests) |
+| AC-5.2 | Stop Docker, run `python -m pytest -rs tests\test_db.py`: the database tests error, none is skipped | Yes (2026-11-23): `ERROR ... Docker is needed for the database tests: start Docker Desktop`, no test skipped because of Docker |
 
 > Fill "Passes today?" by running the check, not from memory, and write the date.
 

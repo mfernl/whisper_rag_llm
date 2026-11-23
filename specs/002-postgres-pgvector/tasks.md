@@ -99,15 +99,28 @@
 
 ## Block C: test database (R5)
 
-### T6. Write the testcontainers fixture in `tests/conftest.py`
+### T6. Write the testcontainers fixture in `conftest.py`
 - **Closes:** AC-5.1, AC-5.2, the rest of G1.
 - **Depends on:** T2, T4.
-- **Steps:** TODO
-  > Use the two layers from our earlier talk: a session-scoped fixture (container + `alembic upgrade head`, Q3) and a function-scoped `db_session` that rolls back after each test.
-  > How does Alembic get the container's URL? (`config.set_main_option`, Alembic API docs.)
-  > AC-5.2: what does testcontainers do when Docker is off, and how do you make sure it errors instead of skipping?
-- **Done when:** with Docker on, TODO. With Docker off, `python -m pytest -rs` shows TODO and no `SKIPPED`.
-- **Commit:** TODO
+- **Background:** the diagram at the top of `conftest.py`.
+- **Steps:**
+  - Create `conftest.py` in the **repo root** (not `tests/`), so `Path(__file__).parent` is the folder with `alembic.ini`. Run the tests from the repo root (`python -m pytest tests\...`): with no pytest config file, a root `conftest.py` is not loaded when pytest runs from `tests/`.
+  - Session-scoped fixture `pg_engine`:
+    1. Start `PostgresContainer("pgvector/pgvector:0.8.7-pg18-bookworm", username=..., password=..., dbname=...)`. Pass the credentials explicitly; otherwise testcontainers reads `POSTGRES_PASSWORD` and `POSTGRES_DB` from the shell.
+    2. With `pytest.MonkeyPatch.context()` (the `monkeypatch` fixture is function-scoped and can't be used in a session fixture), set the five `POSTGRES_*` settings: the same credentials, `POSTGRES_HOST` from `get_container_host_ip()`, `POSTGRES_PORT` from `get_exposed_port(5432)` (the random host port mapped to the container's 5432).
+    3. Reset `database._engine` to `None` and call `get_engine()`: it builds a new engine from the container settings.
+    4. Run `command.upgrade(Config(<repo root>/alembic.ini), "head")`. No `set_main_option`: `alembic/env.py` takes the URL from `get_engine()`, so the app, Alembic and the tests share the container URL and nothing touches the dev database.
+    5. `yield` the engine inside `MonkeyPatch.context()`. In a `finally`: `engine.dispose()` and `pg.stop()`; a teardown error becomes a `warnings.warn`, not a failure.
+  - Function-scoped fixture `db_session(pg_engine)`: connection → `begin()` → `Session` bound to that connection → `yield` → close the session, roll back the transaction, close the connection.
+  - No `autouse` fixture: tests that need the database ask for `db_session` (or `pg_engine`), so the T5 tests don't need Docker.
+  - Delete the old SQLite `db_session` fixture from `tests/test_db.py`; the one in `conftest.py` replaces it.
+  - AC-5.2: only `PostgresContainer(...)` is in a `try` (its constructor is what fails with Docker off); `except DockerException` calls `pytest.fail("Docker is needed ...", pytrace=False)`. Never `pytest.skip`.
+- **Done when:**
+  - With Docker on, `test_pgEngineSetup` (`pg_engine`) passes: the container has exactly the `models.py` tables plus `alembic_version`. Kept as a start for AC-2.1 (block D).
+  - With Docker on, `python -m pytest -v tests\test_db.py` still shows the four T5 cases passed.
+  - With Docker off, `python -m pytest -rs tests	est_db.py` shows `ERROR` with a message saying Docker is needed, and no `SKIPPED`.
+  - The dev database is untouched: `alembic current` from cmd still prints `e6edc15da35a (head)`.
+- **Commit:** `test(db): add a testcontainers fixture for a throwaway Postgres`
 
 ### T7. Move the existing model tests to the new fixture
 - **Closes:** spec 001 G1 (the tests run).

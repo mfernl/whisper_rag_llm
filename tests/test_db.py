@@ -2,25 +2,13 @@ import pytest
 from app.models import User, RealTimeSession, BatchTranscription, TranscriptionEmbeddings
 from app.models import Base
 from app.security import hash_password
-from sqlalchemy import create_engine
+import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from app.database import get_engine
 from app import database
 import re
 
 from sqlalchemy.exc import IntegrityError
-
-@pytest.fixture(scope="function")
-def db_session():
-        engine = create_engine('sqlite:///:memory:')   
-        Base.metadata.create_all(engine)
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        
-        yield session
-
-        session.rollback()
-        session.close()
 
 @pytest.fixture(scope="function")
 def user(db_session):
@@ -74,6 +62,18 @@ class TestDatabase:
         with pytest.raises(RuntimeError, match = re.escape('[ERR]: database username (POSTGRES_USERNAME) not found in .env file\n[ERR]: database user' \
         ' password (POSTGRES_PASSWORD) not found in .env file\n[ERR]: database name (POSTGRES_DB) not found in .env file')):
             get_engine()   
+
+    def test_pgEngineSetup(self,pg_engine):
+        """
+        After alembic upgrade head, the container has exactly the models.py tables
+        plus alembic_version (Alembic's own table with the current revision).
+        """
+        db_tables = set(sqlalchemy.inspect(pg_engine).get_table_names())
+        model_tables = set(Base.metadata.tables)       # the keys are the table names
+        # Sets, not lengths: a missing table plus an unexpected one would still give the
+        # same length. If it fails, pytest shows which names are missing or extra.
+        assert db_tables == model_tables | {"alembic_version"}
+
 
     @pytest.mark.skip(reason="T7: needs the Postgres fixture (spec 001 G1)")
     def test_realTime_Batch_db(self,db_session,user,rt,btch):
