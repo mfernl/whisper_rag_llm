@@ -95,7 +95,7 @@ The schema is managed with Alembic migrations instead of `Base.metadata.create_a
 | AC-2.1 | `test_alembic_upgrade` | No test (2026-11-19) |
 | AC-2.2 | `test_alembic_downgrade`: after `downgrade base`, only `alembic_version` is left and `vector` is not in `pg_extension` | No test (2026-11-19) |
 | AC-2.3 | `test_check_alembic` | No test (2026-11-19) |
-| AC-3.1 | Today: `python -c "import app.database"` with the three `POSTGRES_*` variables unset raises `RuntimeError` naming each one. Needs a pytest test (G9). | Yes, by command (2026-11-19) |
+| AC-3.1 | `test_missing_postgres_var` (one variable missing, parametrized) and `test_missing_postgres_variables` (all three missing) in `tests/test_db.py`, which call `get_engine()`; `lifespan` calls it first, so the same error stops the app (T4, T5) | Yes (2026-11-23): passes with the `POSTGRES_*` variables unset and set in the shell; the mutation check (dropping the `POSTGRES_DB` check) makes two cases fail |
 | AC-4.1 | Write a row, `docker compose down`, `up -d`: the row is still there. After `down -v` it is gone (expected). | Not checked (Docker not running, 2026-11-19) |
 | AC-5.1 | Testcontainers fixture in `tests/conftest.py` (not written yet) | No (G1, checked 2026-11-19) |
 | AC-5.2 | Stop Docker, run `python -m pytest -rs`: the database tests error, none is skipped | No: there is no fixture yet |
@@ -109,7 +109,7 @@ The schema is managed with Alembic migrations instead of `Base.metadata.create_a
 - **G6. Dead code in `app/main.py:62-66`.** `CREATE EXTENSION` and `Base.metadata.create_all` are commented out. The migration does both now, so R2 says they should be deleted, not kept.
 - **G7. `app/database.py` does four jobs at import time:** it reads the settings, builds the URI, creates the engine and defines `Base`. That breaks the Single Responsibility Principle, and it is the root cause of G1: the tests can't import the models (which only need `Base`) without a full Postgres configuration.
 - **G8. The host `db` is hard-coded in `pg_uri`, and the `db` service publishes no port.** Alembic and psql can only connect from inside compose, and a testcontainers database (which runs on a random host port) can't be used without changing the code. The URI (or host and port) must come from settings.
-- **G9. AC-3.1 has no pytest test.** Constitution section 3 asks for at least one test per criterion.
+- **G9. AC-3.1 has no pytest test.** Constitution section 3 asks for at least one test per criterion. Covered by T5 (2026-11-23).
 - **G10. Code that breaks constitution section 5** (out of scope: moved to `003-security-fixes`, see Q4). Kept here so the new spec can copy the list:
   - `"soyadmin"` bypass: `app/main.py:138`.
   - `verify_exp: False`: `app/main.py:143`, and also `:172`, `:281` and `:379` (four places, not one).

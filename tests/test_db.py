@@ -4,6 +4,9 @@ from app.models import Base
 from app.security import hash_password
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from app.database import get_engine
+from app import database
+import re
 
 from sqlalchemy.exc import IntegrityError
 
@@ -40,9 +43,39 @@ def btch(db_session, user):
     db_session.commit()
     return batch
 
+@pytest.fixture(scope="function")
+def envCred(monkeypatch):
+    monkeypatch.setattr(database, "_engine", None)
+
+    monkeypatch.setenv('POSTGRES_USERNAME', 'test')
+    monkeypatch.setenv('POSTGRES_PASSWORD', 'test')
+    monkeypatch.setenv('POSTGRES_DB', 'test')
+
         
 class TestDatabase:
 
+    @pytest.mark.parametrize("missing_var", ["POSTGRES_USERNAME", "POSTGRES_PASSWORD", "POSTGRES_DB"])
+    def test_missing_postgres_var(self, missing_var, monkeypatch, envCred):
+        """
+        Get engine with any variable missing raises RuntimeError.
+        """
+        monkeypatch.delenv(name = missing_var, raising = False)
+        with pytest.raises(RuntimeError) as rerr:
+            get_engine()
+        assert missing_var in str(rerr.value)
+    
+    def test_missing_postgres_variables(self,monkeypatch, envCred):
+        """
+        Get engine without the env variables raises RuntimeError.
+        """
+        for var in ["POSTGRES_USERNAME", "POSTGRES_PASSWORD", "POSTGRES_DB"]:
+            monkeypatch.delenv(name = var, raising = False)
+        
+        with pytest.raises(RuntimeError, match = re.escape('[ERR]: database username (POSTGRES_USERNAME) not found in .env file\n[ERR]: database user' \
+        ' password (POSTGRES_PASSWORD) not found in .env file\n[ERR]: database name (POSTGRES_DB) not found in .env file')):
+            get_engine()   
+
+    @pytest.mark.skip(reason="T7: needs the Postgres fixture (spec 001 G1)")
     def test_realTime_Batch_db(self,db_session,user,rt,btch):
 
         realTime = db_session.query(RealTimeSession).filter_by(session_id = "articuno#12").first()
@@ -53,6 +86,7 @@ class TestDatabase:
         assert batch.batch_id == "articuno#B1"
         assert batch.username == "articuno"
 
+    @pytest.mark.skip(reason="T7: needs the Postgres fixture (spec 001 G1)")
     def test_embedding_two_transcriptions(self,db_session,user,rt,btch):
         ses = db_session.query(RealTimeSession).filter_by(session_id = "articuno#12").first()
         batch = db_session.query(BatchTranscription).filter_by(batch_id = "articuno#B1").first()
@@ -70,6 +104,7 @@ class TestDatabase:
             db_session.commit()
         db_session.rollback()
 
+    @pytest.mark.skip(reason="T7: needs the Postgres fixture (spec 001 G1)")
     def test_embedding_no_transcriptions(self,db_session):
         emb = TranscriptionEmbeddings(
             embedding = "asdfg", 
@@ -82,6 +117,7 @@ class TestDatabase:
             db_session.commit()
         db_session.rollback()
 
+    @pytest.mark.skip(reason="T7: needs the Postgres fixture (spec 001 G1)")
     def test_only_batch_accepted(self, db_session, user, btch):
         emb = TranscriptionEmbeddings(
             batch_id = btch.batch_id,  
@@ -94,6 +130,7 @@ class TestDatabase:
         db_session.commit()                 # si falla, el test falla
         assert db_session.query(TranscriptionEmbeddings).count() == 1
 
+    @pytest.mark.skip(reason="T7: needs the Postgres fixture (spec 001 G1)")
     def test_only_session_accepted(self, db_session, user, rt):
         emb = TranscriptionEmbeddings(
             session_id = rt.session_id,  
@@ -106,6 +143,7 @@ class TestDatabase:
         db_session.commit()                 # si falla, el test falla
         assert db_session.query(TranscriptionEmbeddings).count() == 1
 
+    @pytest.mark.skip(reason="T7: needs the Postgres fixture (spec 001 G1)")
     def test_rt_session_usuario_inexistente(self, db_session):                                                     
         rtses = RealTimeSession(                                                                                 
             session_id = "rt.session_id",                                                                                              

@@ -87,10 +87,15 @@
 ### T5. Test AC-3.1 (missing settings)
 - **Closes:** G9, AC-3.1.
 - **Depends on:** T4.
-- **Steps:** TODO
-  > Hint: after T4, *when* is the `RuntimeError` raised: at import time or when the engine is created? AC-3.1 says "refuse to start". Does the test still match the criterion? Look up pytest's `monkeypatch.delenv`.
-- **Done when:** TODO
-- **Commit:** TODO
+- **Steps:**
+  - In `tests/test_db.py`, create the fixture `envCred` (pytest `monkeypatch`). It resets the cached `database._engine` to `None` and sets the three `POSTGRES_*` variables to dummy values, so each test controls its own environment and doesn't depend on the shell or on an earlier test.
+  - Create `test_missing_postgres_var`, parametrized over the three variables: it deletes one and checks that the `RuntimeError` from `get_engine()` names it.
+  - Create `test_missing_postgres_variables`: with all three deleted, it checks that the error lists the three messages.
+  - Point the skip reason of the six model tests to T7 (they need the Postgres fixture, spec 001 G1).
+- **Done when:**
+  - `python -m pytest -v tests\test_db.py` shows the four T5 cases as passed, both with the `POSTGRES_*` variables unset and with them set in cmd (`set POSTGRES_DB=x`, and so on).
+  - Mutation check: commenting out one of the `if not ...` checks in `get_engine()` makes at least one T5 case fail.
+- **Commit:** `test(db): check that missing database settings stop the engine`
 
 ## Block C: test database (R5)
 
