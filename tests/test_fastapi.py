@@ -14,33 +14,11 @@ import statistics
 import os
 from jiwer import wer
 from app.models import User, Admin
-from app.database import SessionLocal
 from app.models import Base
 from app.security import hash_password
 
 
 client = TestClient(app)
-
-Base.metadata.create_all(bind=engine)
-db = SessionLocal()
-existing = db.query(User).filter_by(username = "articuno").first()
-if not existing:
-    new_user = User(username = "articuno", password = hash_password("12345"))
-    db.add(new_user)
-    db.commit()
-    db.close()
-existing = db.query(User).filter_by(username = "gyarados").first()
-if not existing:
-    new_user = User(username = "gyarados", password = hash_password("12345"))
-    db.add(new_user)
-    db.commit()
-    db.close()
-existing = db.query(Admin).filter_by(username = "Marco").first()
-if not existing:
-    new_admin = Admin(username = "Marco", password = hash_password("12345"))
-    db.add(new_admin)
-    db.commit()
-    db.close
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='pruebas.log', encoding='utf-8', level=logging.DEBUG)
@@ -50,7 +28,7 @@ def test_get_openapi():
 
     assert response.status_code == 200
 
-def test_token_revocado():
+def test_token_revocado(user):
     login = client.post("/login", params={"username": "articuno", "password": "12345"})
     token_rev = login.json()
     assert login.status_code == 200
@@ -88,7 +66,7 @@ def mock_create_idRT(data):
     # Forzar un valor estático para id_RT
     return "0#articuno"  
 
-def test_duplicated_session():
+def test_duplicated_session(user):
 
     # Login para obtener el token de acceso
     response = client.post("/login", params={"username": "articuno", "password": "12345"})
@@ -107,7 +85,7 @@ def test_duplicated_session():
         assert response2.status_code == 400
         assert response2.json() == {"detail": "Sesión duplicada"}
 
-def test_login():
+def test_login(user):
 
     response = client.post("/login", params={"username": "articuno", "password": "12345"})
     
@@ -134,7 +112,7 @@ def test_login_no_username():
     # Verificar que la respuesta es del error que buscamos
     assert response.json() == {"detail": "User not found"}
 
-def test_login_wrong_password():
+def test_login_wrong_password(user):
     
     response = client.post("/login", params={"username": "articuno", "password": "125"})
  
@@ -142,7 +120,7 @@ def test_login_wrong_password():
     # Verificar que la respuesta es del error que buscamos
     assert response.json() == {"detail": "Password error"}
 
-def test_login_no_password():
+def test_login_no_password(user):
     
     response = client.post("/login", params={"username": "articuno", "password": ""})
  
@@ -150,7 +128,7 @@ def test_login_no_password():
     # Verificar que la respuesta es del error que buscamos
     assert response.json() == {"detail": "Password error"}
 
-def test_close_session():
+def test_close_session(user):
     log = client.post("/login", params={"username": "articuno", "password": "12345"})
     assert log.status_code == 200
     print(f"Este es el token del login: {log.json()}")
@@ -166,7 +144,7 @@ def test_close_session():
     assert close_data["session_id"] == session
     assert close_data["full_transcription"] == ""
 
-def test_close_session_wrongtoken():
+def test_close_session_wrongtoken(user):
     log = client.post("/login", params={"username": "articuno", "password": "12345"})
     assert log.status_code == 200
     print(f"Este es el token del login: {log.json()}")
@@ -180,7 +158,7 @@ def test_close_session_wrongtoken():
     assert close.status_code == 401
     assert close.json() == {"detail": "No autorizado para operar en este canal"}
 
-def test_close_session_sessionNotFound():
+def test_close_session_sessionNotFound(user):
     log = client.post("/login", params={"username": "articuno", "password": "12345"})
     assert log.status_code == 200
     print(f"Este es el token del login: {log.json()}")
@@ -193,7 +171,7 @@ def test_close_session_sessionNotFound():
     assert close.status_code == 404
     assert close.json() == {"detail": "No se ha encontrado la sesión"}
 
-#@pytest.mark.skip(reason="ahorrar tiempo")
+@pytest.mark.skip(reason="ahorrar tiempo")
 def test_transmision():
     token = client.post("/login", params={"username": "articuno", "password": "12345"})
     assert token.status_code == 200

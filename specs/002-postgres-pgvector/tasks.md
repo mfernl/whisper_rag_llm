@@ -118,7 +118,7 @@
 - **Done when:**
   - With Docker on, `test_pgEngineSetup` (`pg_engine`) passes: the container has exactly the `models.py` tables plus `alembic_version`. Kept as a start for AC-2.1 (block D).
   - With Docker on, `python -m pytest -v tests\test_db.py` still shows the four T5 cases passed.
-  - With Docker off, `python -m pytest -rs tests	est_db.py` shows `ERROR` with a message saying Docker is needed, and no `SKIPPED`.
+  - With Docker off, `python -m pytest -rs tests\test_db.py` shows `ERROR` with a message saying Docker is needed, and no `SKIPPED`.
   - The dev database is untouched: `alembic current` from cmd still prints `e6edc15da35a (head)`.
 - **Commit:** `test(db): add a testcontainers fixture for a throwaway Postgres`
 
@@ -126,10 +126,15 @@
 - **Closes:** spec 001 G1 (the tests run).
 - **Depends on:** T6.
 - **Steps:** TODO
+  - Old SQLite `db_session` fixture in `tests/test_db.py` deleted in T6. Because `conftest.py` replaces the old fixture with a new one connecting to a test database.
+  - Delete old `test_fastapi` database setup and replace it with the new fixture.
+  - Edit old tests so now they use the new fixtures.
   > Hint: delete the old SQLite `db_session` fixture in `tests/test_db.py`. Which tests fail now, and why? Write the reasons down, because T8-T10 fix them.
   > Note (from T4, 2026-11-22): after T4, `tests/test_fastapi.py` can't even be collected. `Base.metadata.create_all(bind=engine)` (line 24) uses an `engine` that `app.database` no longer exports (`NameError`), and lines 24-27 open a session at **import time**. Move that setup into the T6 fixture (a test DB, not the real one) and remove the module-level `engine`/`SessionLocal()` use, so the tests write to the container and not to the dev database.
-- **Done when:** TODO
-- **Commit:** TODO
+- **Done when:** 
+  - With docker on, `python -m pytest -v tests\test_fastapi.py` passes all the tests.
+  - With Docker on, `python -m pytest -v tests\test_db.py` passes all the tests.
+- **Commit:** `test(api): use new fixture to run old API tests`
 
 ### T8. Restore the foreign key check
 - **Closes:** spec 001 G2.

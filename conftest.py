@@ -34,6 +34,10 @@ from sqlalchemy.orm import sessionmaker
 from pathlib import Path
 from docker.errors import DockerException
 import warnings
+from app.models import User, RealTimeSession, BatchTranscription
+from app.security import hash_password
+
+
 
 # Starts the test database, migrates it and gives the tests an engine pointing at it.
 @pytest.fixture(scope="session")
@@ -118,3 +122,32 @@ def db_session(pg_engine):
         session.close()
         transaction.rollback()                # throw away everything the test wrote
         connection.close()
+
+@pytest.fixture(scope="function")
+def user(db_session):
+     user1 = User(username="articuno", password=hash_password("12345"))
+     db_session.add(user1)
+     db_session.commit()
+     return user1
+
+@pytest.fixture(scope="function")
+def rt(db_session, user):
+    rtses = RealTimeSession(session_id = "articuno#12", username = user.username)
+    db_session.add(rtses)
+    db_session.commit()
+    return rtses
+
+@pytest.fixture(scope="function")
+def btch(db_session, user):
+    batch = BatchTranscription(batch_id = "articuno#B1", context = "batch prueba", username = user.username)
+    db_session.add(batch)
+    db_session.commit()
+    return batch
+
+@pytest.fixture(scope="function")
+def envCred(monkeypatch):
+    monkeypatch.setattr(database, "_engine", None)
+
+    monkeypatch.setenv('POSTGRES_USERNAME', 'test')
+    monkeypatch.setenv('POSTGRES_PASSWORD', 'test')
+    monkeypatch.setenv('POSTGRES_DB', 'test')
