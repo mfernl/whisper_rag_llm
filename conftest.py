@@ -111,11 +111,10 @@ def pg_engine():
 def db_session(pg_engine):
     connection = pg_engine.connect()
     transaction = connection.begin()          # outer transaction, owned by the fixture
-    Session = sessionmaker(bind=connection)   # the session uses THIS connection
-    session = Session()
-    # FIXME (T7): some model tests call commit() and then rollback() after an IntegrityError.
-    # Check join_transaction_mode in the SQLAlchemy recipe "Joining a Session into an
-    # External Transaction": does session.rollback() undo the outer transaction too?
+    Session = sessionmaker()                  # create session class
+    session = Session(bind=connection, join_transaction_mode="create_savepoint") 
+    # "create_savepoint"  indicates that new SAVEPOINTs should 
+    # be created in order to implement BEGIN/COMMIT/ROLLBACK for the Session
     try:
         yield session
     finally:

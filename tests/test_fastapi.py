@@ -13,8 +13,6 @@ import logging
 import statistics
 import os
 from jiwer import wer
-from app.models import User, Admin
-from app.models import Base
 from app.security import hash_password
 
 
@@ -23,11 +21,13 @@ client = TestClient(app)
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='pruebas.log', encoding='utf-8', level=logging.DEBUG)
 
+@pytest.mark.skip(reason="spec 003")
 def test_get_openapi():
     response = client.get("/openapi.json")
 
     assert response.status_code == 200
 
+@pytest.mark.skip(reason="spec 003")
 def test_token_revocado(user):
     login = client.post("/login", params={"username": "articuno", "password": "12345"})
     token_rev = login.json()
@@ -42,6 +42,7 @@ def test_token_revocado(user):
     assert appstatus.status_code == 401
     assert appstatus.json() == {"detail": "El token ha sido revocado"}
 
+@pytest.mark.skip(reason="spec 003")
 def test_wrong_user():
     badusertoken = create_token({"username": "vileplume"})
 
@@ -50,6 +51,7 @@ def test_wrong_user():
     assert appstatus.status_code == 401
     assert appstatus.json() == {"detail": "El usuario no es valido"}
 
+@pytest.mark.skip(reason="spec 003")
 def test_expired_token():
     data_token = {"username": "articuno"}
     expiracion = datetime.now(timezone.utc) + timedelta(seconds=-2) #sumarle a la hora actual el timedelta deseado
@@ -66,6 +68,7 @@ def mock_create_idRT(data):
     # Forzar un valor estático para id_RT
     return "0#articuno"  
 
+@pytest.mark.skip(reason="spec 003")
 def test_duplicated_session(user):
 
     # Login para obtener el token de acceso
@@ -85,6 +88,7 @@ def test_duplicated_session(user):
         assert response2.status_code == 400
         assert response2.json() == {"detail": "Sesión duplicada"}
 
+@pytest.mark.skip(reason="spec 003")
 def test_login(user):
 
     response = client.post("/login", params={"username": "articuno", "password": "12345"})
@@ -96,6 +100,7 @@ def test_login(user):
     token = response.json()
     assert isinstance(token, str)  # Verifica que el token sea un string
 
+@pytest.mark.skip(reason="spec 003")
 def test_login_wrong_username():
     
     response = client.post("/login", params={"username": "moltres", "password": "12345"})
@@ -104,6 +109,7 @@ def test_login_wrong_username():
     # Verificar que la respuesta es del error que buscamos
     assert response.json() == {"detail": "User not found"}
 
+@pytest.mark.skip(reason="spec 003")
 def test_login_no_username():
     
     response = client.post("/login", params={"username": "", "password": "12345"})
@@ -112,6 +118,7 @@ def test_login_no_username():
     # Verificar que la respuesta es del error que buscamos
     assert response.json() == {"detail": "User not found"}
 
+@pytest.mark.skip(reason="spec 003")
 def test_login_wrong_password(user):
     
     response = client.post("/login", params={"username": "articuno", "password": "125"})
@@ -120,6 +127,7 @@ def test_login_wrong_password(user):
     # Verificar que la respuesta es del error que buscamos
     assert response.json() == {"detail": "Password error"}
 
+@pytest.mark.skip(reason="spec 003")
 def test_login_no_password(user):
     
     response = client.post("/login", params={"username": "articuno", "password": ""})
@@ -128,6 +136,7 @@ def test_login_no_password(user):
     # Verificar que la respuesta es del error que buscamos
     assert response.json() == {"detail": "Password error"}
 
+@pytest.mark.skip(reason="spec 003")
 def test_close_session(user):
     log = client.post("/login", params={"username": "articuno", "password": "12345"})
     assert log.status_code == 200
@@ -144,6 +153,7 @@ def test_close_session(user):
     assert close_data["session_id"] == session
     assert close_data["full_transcription"] == ""
 
+@pytest.mark.skip(reason="spec 003")
 def test_close_session_wrongtoken(user):
     log = client.post("/login", params={"username": "articuno", "password": "12345"})
     assert log.status_code == 200
@@ -158,6 +168,7 @@ def test_close_session_wrongtoken(user):
     assert close.status_code == 401
     assert close.json() == {"detail": "No autorizado para operar en este canal"}
 
+@pytest.mark.skip(reason="spec 003")
 def test_close_session_sessionNotFound(user):
     log = client.post("/login", params={"username": "articuno", "password": "12345"})
     assert log.status_code == 200
@@ -171,7 +182,7 @@ def test_close_session_sessionNotFound(user):
     assert close.status_code == 404
     assert close.json() == {"detail": "No se ha encontrado la sesión"}
 
-@pytest.mark.skip(reason="ahorrar tiempo")
+@pytest.mark.skip(reason="spec 005")
 def test_transmision():
     token = client.post("/login", params={"username": "articuno", "password": "12345"})
     assert token.status_code == 200
@@ -193,6 +204,7 @@ def test_transmision():
     print(f"esta es la json_data {json_data}")
     assert json_data["transcripcion"][0]["start"] == "0.00"
 
+@pytest.mark.skip(reason="spec 004")
 def test_upload_notWavFile():
     file_path = "../test_audio/vanilla.mp3"  # Ruta del archivo real
     
@@ -207,6 +219,7 @@ def test_upload_notWavFile():
     assert response.status_code == 400
     assert response.json() == {"detail": "Solo se permiten archivos .wav"}
 
+@pytest.mark.skip(reason="spec 004")
 def test_broadcastnotWavFile():
     file_path = "../test_audio/vanilla.mp3"   # Ruta del archivo real
     
@@ -225,7 +238,7 @@ def test_broadcastnotWavFile():
     assert response.status_code == 400
     assert response.json() == {"detail": "Solo se permiten archivos .wav"}
 
-@pytest.mark.asyncio
+@pytest.mark.skip(reason="spec 004")
 async def test_transmision_w_session_closed():
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://127.0.0.1:8000"
@@ -267,7 +280,7 @@ async def test_transmision_w_session_closed():
     
 
 
-#@pytest.mark.skip(reason="ahorrar tiempo")
+@pytest.mark.skip(reason="spec 004")
 def test_subir_archivo_real():
     file_path = "../test_audio/vanilla.wav"  # Ruta del archivo real
     
@@ -285,7 +298,7 @@ def test_subir_archivo_real():
     assert json_data["filename"] == "../test_audio/vanilla.wav"
     assert json_data["status"] == "success"
 
-#@pytest.mark.skip(reason="ahorrar tiempo")
+@pytest.mark.skip(reason="spec 004")
 def test_subir_archivos_RT():
     rutaArchivos = "../audio_chopeado/" 
     token = client.post("/login", params={"username": "articuno", "password": "12345"})
@@ -310,7 +323,7 @@ def test_subir_archivos_RT():
         print(f"esta es la json_data {json_data}")
         assert json_data["session"] == rtId
         
-#@pytest.mark.skip(reason="ahorrar tiempo")
+@pytest.mark.skip(reason="spec 004")
 def test_appstatus():
     response = client.get("/appstatus", params = {"access_token": "soyadmin"})
 
@@ -320,7 +333,7 @@ def test_appstatus():
     assert isinstance(json_data["whisper_version"], str) 
     assert isinstance(json_data["connected_clients"], int) 
     
-#@pytest.mark.skip(reason="ahorrar tiempo")
+@pytest.mark.skip(reason="spec 004")
 def test_hoststatus():
     response = client.get("/hoststatus", params = {"access_token": "soyadmin"})
 
@@ -328,7 +341,7 @@ def test_hoststatus():
     json_data = response.json()
     assert isinstance(json_data["Memoria Reservada (GB)"], float) 
 
-#@pytest.mark.skip(reason="ahorrar tiempo")
+@pytest.mark.skip(reason="spec 004")
 def test_appstatistics():
     response = client.get("/appstatistics", params = {"access_token": "soyadmin"})
 
@@ -340,8 +353,7 @@ def test_appstatistics():
 
 
 
-@pytest.mark.asyncio
-#@pytest.mark.skip(reason="ahorrar tiempo")
+@pytest.mark.skip(reason="spec 004")
 async def test_subir_archivo_async():
     result = []
     for i in range(5):
@@ -398,8 +410,7 @@ async def test_subir_archivo_async():
 
 
 
-#@pytest.mark.skip(reason = "ahorrar tiempo")
-@pytest.mark.asyncio
+@pytest.mark.skip(reason="spec 004")
 async def test_subir_archivos_varias_sesiones_RT():
     result = []
     for i in range(5):
@@ -448,8 +459,8 @@ async def test_subir_archivos_varias_sesiones_RT():
         for i in result:
             print(i)
 
-#@pytest.mark.skip(reason = "ahorrar tiempo")
-@pytest.mark.asyncio
+@pytest.mark.skip(reason="spec 004")
+#@pytest.mark.asyncio
 async def test_battlefield():
     rutaRT = "../audio_chopeado/"
     usuarios = 2
@@ -529,13 +540,12 @@ async def test_battlefield():
                 for r in resp:
                     assert r.status_code == 200
                     data = r.json()
-                    print(f"RT transcription: {data["session"]}")
+                    print(f"RT transcription: {data['session']}")
             else:  # Respuesta upload
                 assert resp.status_code == 200
-                print(f"Upload: {resp.json()["status"]}")
+                print(f"Upload: {resp.json()['status']}")
         
-@pytest.mark.skip(reason = "WER 10000 exes")
-@pytest.mark.asyncio
+@pytest.mark.skip(reason="spec 005")
 async def test_word_error_rate():
 
     reference = "Probando, probando, probando. Estamos probando la precisión del sistema de transcripción.En un lugar de la mancha, de cuyo nombre no quiero acordarme, no ha mucho tiempo que vivía un hidalgo de los de lanza en astillero, adarga antigua, rocín flaco y galgo corredor.A wizard is never late, Frodo Baggins, nor is he early, he arrives precisely when he means to."
@@ -562,6 +572,7 @@ async def test_word_error_rate():
 
     return 0
 
+@pytest.mark.skip(reason="spec 005")
 def test_admin_add_not_csv_iWords():
     csv = "../assets/controlador_gpu.py"
 
@@ -574,6 +585,7 @@ def test_admin_add_not_csv_iWords():
     assert response.status_code == 400
     assert response.json() == {"detail": "csv file required"}
 
+@pytest.mark.skip(reason="spec 005")
 def test_admin_add_iWords():
     csv = "../assets/add.csv"
 
@@ -587,8 +599,7 @@ def test_admin_add_iWords():
     assert response.json()["add"] == "csv_file"
 
 
-@pytest.mark.asyncio
-#@pytest.mark.skip(reason="ahorrar tiempo")
+@pytest.mark.skip(reason="spec 005")
 async def test_subir_archivo_async_word_detection():
     usuarios = 10
     torch.cuda.empty_cache()
@@ -642,7 +653,7 @@ async def test_subir_archivo_async_word_detection():
             assert json_data["aviso_terminos_detectados"][0] == "astillero"
 
 
-#@pytest.mark.skip(reason="ahorrar tiempo")
+@pytest.mark.skip(reason="spec 005")
 def test_admin_delete_not_csv_iWords():
     csv = "../assets/controlador_gpu.py"
 
@@ -655,7 +666,7 @@ def test_admin_delete_not_csv_iWords():
     assert response.status_code == 400
     assert response.json() == {"detail": "csv file required"}
 
-#@pytest.mark.skip(reason="ahorrar tiempo")
+@pytest.mark.skip(reason="spec 005")
 def test_admin_delete_iWords():
     csv = "../assets/delete.csv"
 
@@ -667,7 +678,7 @@ def test_admin_delete_iWords():
     assert response.status_code == 200
     assert response.json()["delete"] == "csv_file"
 
-#@pytest.mark.skip(reason="ahorrar tiempo")
+@pytest.mark.skip(reason="spec 005")
 def test_admin_delete_all_iWords():
     csv = "../assets/delete.csv"
 

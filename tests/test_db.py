@@ -3,7 +3,7 @@ from app.models import Base
 import sqlalchemy
 from app.database import get_engine
 import re
-from app.models import RealTimeSession, BatchTranscription, TranscriptionEmbeddings
+from app.models import RealTimeSession, BatchTranscription, TranscriptionEmbeddings, User
 from sqlalchemy.exc import IntegrityError
 
 
@@ -111,15 +111,27 @@ class TestDatabase:
         db_session.commit()                 # si falla, el test falla
         assert db_session.query(TranscriptionEmbeddings).count() == 1
 
-    #@pytest.mark.skip(reason="T7: needs the Postgres fixture (spec 001 G1)")
+
     def test_rt_session_usuario_inexistente(self, db_session):                                                     
         rtses = RealTimeSession(                                                                                 
             session_id = "rt.session_id",                                                                                              
             username = "manolo"                                                                              
         )                                                                                                                                        
         db_session.add(rtses)                                                                                                                        
-        #with pytest.raises(IntegrityError) as excinfo:                                                    
-        db_session.commit()                                                                                                                 
-        #print(excinfo.value)
+        with pytest.raises(IntegrityError) as excinfo:                                                    
+            db_session.commit()
         db_session.rollback()
+
+    def test_session_joinTransaction(self,db_session, user):                                                     
+        rtses = RealTimeSession(                                                                                 
+            session_id = "rt.session_id",                                                                                              
+            username = "manolo"                                                                              
+        )                                                                                                                                        
+        db_session.add(rtses)                                                                                                                        
+        with pytest.raises(IntegrityError) as excinfo:                                                    
+            db_session.commit()                                                                                                                 
+        db_session.rollback()
+        assert db_session.query(User).count() == 1
+
+
 

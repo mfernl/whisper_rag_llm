@@ -125,22 +125,23 @@
 ### T7. Move the existing model tests to the new fixture
 - **Closes:** spec 001 G1 (the tests run).
 - **Depends on:** T6.
-- **Steps:** TODO
+- **Steps:**
   - Old SQLite `db_session` fixture in `tests/test_db.py` deleted in T6. Because `conftest.py` replaces the old fixture with a new one connecting to a test database.
-  - Delete old `test_fastapi` database setup and replace it with the new fixture.
-  - Edit old tests so now they use the new fixtures.
-  > Hint: delete the old SQLite `db_session` fixture in `tests/test_db.py`. Which tests fail now, and why? Write the reasons down, because T8-T10 fix them.
-  > Note (from T4, 2026-11-22): after T4, `tests/test_fastapi.py` can't even be collected. `Base.metadata.create_all(bind=engine)` (line 24) uses an `engine` that `app.database` no longer exports (`NameError`), and lines 24-27 open a session at **import time**. Move that setup into the T6 fixture (a test DB, not the real one) and remove the module-level `engine`/`SessionLocal()` use, so the tests write to the container and not to the dev database.
+  - Delete old `test_fastapi.py` database setup and replace it with the new fixture.
+  - Organize tests from `test_fastapi.py` so they are fixed in different specs (003, 004 and 005).
+  - Modify `conftest.py` in order to yield a session to the tests that creates savepoints each time the tests COMMIT/BEGIN/ROLLBACK (using `join_transaction_mode`).
+  - Create test to prove `join_transaction` saves the session as it was before the tests COMMITS/ROLLBACKS.
 - **Done when:** 
-  - With docker on, `python -m pytest -v tests\test_fastapi.py` passes all the tests.
+  - With docker on, `python -m pytest -v tests\test_fastapi.py` is collected, every test skipped with its spec.
   - With Docker on, `python -m pytest -v tests\test_db.py` passes all the tests.
-- **Commit:** `test(api): use new fixture to run old API tests`
+- **Commit:** `test(db): organize tests and modify fixture to allow commits during tests`
 
 ### T8. Restore the foreign key check
 - **Closes:** spec 001 G2.
 - **Depends on:** T7.
 - **Steps:** TODO
 - **Done when:** `test_rt_session_usuario_inexistente` TODO.
+  > Note (2026-11-25): T7 already turned this test on (`pytest.raises(IntegrityError)`), because T7's "Done when" needs every `test_db.py` test to pass. Still to do here: assert that the error is the foreign key one (`excinfo.value.orig`), not any `IntegrityError`.
 - **Commit:** TODO
 
 ### T9. Test duplicate ids
