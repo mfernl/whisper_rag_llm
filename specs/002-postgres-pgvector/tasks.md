@@ -139,10 +139,15 @@
 ### T8. Restore the foreign key check
 - **Closes:** spec 001 G2.
 - **Depends on:** T7.
-- **Steps:** TODO
-- **Done when:** `test_rt_session_usuario_inexistente` TODO.
-  > Note (2026-11-25): T7 already turned this test on (`pytest.raises(IntegrityError)`), because T7's "Done when" needs every `test_db.py` test to pass. Still to do here: assert that the error is the foreign key one (`excinfo.value.orig`), not any `IntegrityError`.
-- **Commit:** TODO
+- **Steps:**
+  - Rename `test_rt_session_usuario_inexistente` to `test_rt_session_nonexistentUser`: constitution section 4 says everything is in English.
+  - Keep `pytest.raises(IntegrityError)` and assert that the driver error is the foreign key one: `excinfo.value.orig.sqlstate == "23503"` (`foreign_key_violation`, `psycopg.errors.ForeignKeyViolation`). `IntegrityError` alone also covers `NOT NULL`, `UNIQUE` and `CHECK` violations.
+  - Keep `db_session.rollback()` after the `with`: after a failed `commit()` the session can't be used until it is rolled back.
+  - Update spec 001: the AC-3.1 row in section 5 (new test name) and gap G2 (resolved).
+- **Done when:**
+  - With Docker on, `python -m pytest -v tests\test_db.py` passes all the tests.
+  - Mutation check: with an existing user (`user` fixture) and `session_id=None`, the commit raises a `NOT NULL` error (`23502`). The old test (only `pytest.raises(IntegrityError)`) passes, and the new one fails with `assert '23502' == '23503'`. Checked 2026-11-26.
+- **Commit:** `test(db): restore foreign key check`
 
 ### T9. Test duplicate ids
 - **Closes:** spec 001 G3 (spec 001 AC-1.3).

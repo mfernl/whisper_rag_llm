@@ -97,12 +97,13 @@ This phase only defines the tables and their rules. Writing to them from the end
 | AC-2.2 | `test_embedding_no_transcriptions` | Not runnable (G1) |
 | AC-2.3 | `test_only_batch_accepted` | Not runnable (G1) |
 | AC-2.4 | `test_only_session_accepted` | Not runnable (G1) |
-| AC-3.1 | `test_rt_session_usuario_inexistente` | Not checked: no `assert` (G2) |
+| AC-3.1 | `test_rt_session_nonexistentUser` | Passes on Postgres (G2 resolved, spec 002 T8) |
 
 ## 6. Known gaps
 
 - **G1. The suite does not collect (checked 2026-11-17).** `tests/test_db.py` imports `app.models`, which imports `app.database`. At import time, that module raises an error if `POSTGRES_USERNAME`, `POSTGRES_PASSWORD` or `POSTGRES_DB` are missing, and it creates a Postgres engine, which needs `psycopg`. The local `.venv` (Python 3.10) doesn't have `psycopg`. So the tests can't use their own SQLite engine, even though they create one. → `002-postgres-pgvector` (testcontainers fixture) + recreate the `.venv` with 3.11.
 - **G2. Foreign keys are not enforced in the tests.** By default, SQLite doesn't check foreign keys ([SQLite docs, section 2](https://www.sqlite.org/foreignkeys.html#fk_enable)), so `test_rt_session_usuario_inexistente` saves a session for a user who doesn't exist. Its `pytest.raises` is commented out, so it checks nothing. → `002-postgres-pgvector`: run it against Postgres and restore the `pytest.raises(IntegrityError)`.
+  **Resolved 2026-11-26 (spec 002 T8):** the test runs on the Postgres fixture, is renamed `test_rt_session_nonexistentUser`, and asserts SQLSTATE `23503` (`foreign_key_violation`), so other integrity errors don't make it pass.
 - **G3. AC-1.3 (duplicate ids) has no test.** → `002-postgres-pgvector`.
 - **G4. The embedding tests use `"asdfg"` as the embedding.** That isn't a 384-dimension vector, and pgvector will reject it. → `002-postgres-pgvector`: use a valid vector of length 384.
 

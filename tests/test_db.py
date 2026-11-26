@@ -112,7 +112,7 @@ class TestDatabase:
         assert db_session.query(TranscriptionEmbeddings).count() == 1
 
 
-    def test_rt_session_usuario_inexistente(self, db_session):                                                     
+    def test_rt_session_nonexistentUser(self, db_session):                                                     
         rtses = RealTimeSession(                                                                                 
             session_id = "rt.session_id",                                                                                              
             username = "manolo"                                                                              
@@ -120,7 +120,8 @@ class TestDatabase:
         db_session.add(rtses)                                                                                                                        
         with pytest.raises(IntegrityError) as excinfo:                                                    
             db_session.commit()
-        db_session.rollback()
+        assert excinfo.value.orig.sqlstate == "23503"  # foreign_key_violation
+        db_session.rollback()  # after a failed commit() the session can't be used until rollback()
 
     def test_session_joinTransaction(self,db_session, user):                                                     
         rtses = RealTimeSession(                                                                                 
