@@ -210,13 +210,18 @@
 - **Done when:** T14 passes.
 - **Commit:** `alembic(): drop vector extension when downgrade()`
 
-### T13. `test_alembic_upgrade`
+### T13. `test_alembic_upgrade_extensions`
 - **Closes:** AC-2.1.
 - **Depends on:** T6.
-- **Steps:** TODO
-  > Hint: how do you list tables and extensions from SQL instead of `\dt` and `\dx`? Look at SQLAlchemy's `inspect()` and the `pg_extension` catalog.
-- **Done when:** TODO
-- **Commit:** TODO
+- **Steps:**
+  - Split AC-2.1 in two, so nothing is checked twice. The tables half is already `test_pgEngineSetup` (T6, `inspect().get_table_names()`), and its docstring now names AC-2.1 as well as AC-5.1. The extension half is a new test, `test_alembic_upgrade_extensions(pg_engine)`, which queries `pg_extension` for `extname = 'vector'`.
+  - `pg_engine` and not `db_session`: the test only reads the catalog, so it needs no session or rollback.
+  - "Empty database" comes from the fixture: the container is new for every run and has no volume (conftest step 1).
+  - Update spec 002 section 5, the AC-2.1 row (both test names).
+- **Done when:**
+  - `python -m pytest -v tests\test_db.py` with Docker on: 16 passed (checked 2026-11-27).
+  - Mutation check (2026-11-27): commenting out `CREATE EXTENSION` in `upgrade()` goes red, but as an ERROR in `pg_engine` setup, not a FAIL in this test: `upgrade head` stops at the `trcpt_embedding` table with `UndefinedObject` (type `vector` does not exist), so every test that uses the container errors. The extension is required by the schema itself.
+- **Commit:** `test(db): check that upgrade head creates the vector extension`
 
 ### T14. `test_alembic_downgrade`
 - **Closes:** AC-2.2.

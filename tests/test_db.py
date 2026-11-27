@@ -3,6 +3,7 @@ from app.models import Base
 import sqlalchemy
 from app.database import get_engine
 import re
+from sqlalchemy import text
 from app.models import RealTimeSession, BatchTranscription, TranscriptionEmbeddings, User
 from sqlalchemy.exc import IntegrityError, DataError
 
@@ -38,8 +39,9 @@ class TestDatabase:
 
     def test_pgEngineSetup(self,pg_engine):
         """
-        Spec 002 AC-5.1: after alembic upgrade head, the container has exactly the models.py tables
-        plus alembic_version (Alembic's own table with the current revision).
+        Spec 002 AC-5.1 and AC-2.1 (tables half): after alembic upgrade head, the container has
+        exactly the models.py tables plus alembic_version (Alembic's own table with the current
+        revision). The extension half of AC-2.1 is checked by test_alembic_upgrade_extensions.
         """
         db_tables = set(sqlalchemy.inspect(pg_engine).get_table_names())
         model_tables = set(Base.metadata.tables)       # the keys are the table names
@@ -199,4 +201,11 @@ class TestDatabase:
             db_session.commit()
         assert excinfo.value.orig.sqlstate == "23505"  # unique_violation
 
-
+    def test_alembic_upgrade_extensions(self, pg_engine):
+        """
+        Spec 002 AC-2.1 (extension half): after alembic upgrade head on the empty test container,
+        the vector extension is installed. The tables half is checked by test_pgEngineSetup.
+        """
+        with pg_engine.connect() as conn:
+            result = conn.execute(text("SELECT extname FROM pg_extension WHERE extname = 'vector'")).scalar()
+        assert result is not None

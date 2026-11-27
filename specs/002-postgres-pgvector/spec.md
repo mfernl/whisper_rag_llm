@@ -92,7 +92,7 @@ The schema is managed with Alembic migrations instead of `Base.metadata.create_a
 |---|---|---|
 | AC-1.1 | `docker compose up -d`, then `docker compose ps`: `whisper_rag_db` shows `(healthy)` | Not checked (Docker not running, 2026-11-19) |
 | AC-1.2 | `docker compose up`: `whisper_rag_service` starts only after `whisper_rag_db` is `(healthy)` (`depends_on` + `condition: service_healthy`) | Not checked (Docker not running, 2026-11-19) |
-| AC-2.1 | `test_alembic_upgrade` | No test (2026-11-19) |
+| AC-2.1 | Two tests in `tests/test_db.py` on the `pg_engine` container (empty before `upgrade head`): `test_pgEngineSetup` (tables half: exactly the `models.py` tables plus `alembic_version`, shared with AC-5.1) and `test_alembic_upgrade_extensions` (extension half: `vector` is in `pg_extension`) (T13) | Yes (2026-11-27): `python -m pytest -q tests\test_db.py` with Docker on, 16 passed. Mutation check: without `CREATE EXTENSION` the `pg_engine` setup errors with `UndefinedObject` (type `vector` does not exist) |
 | AC-2.2 | `test_alembic_downgrade`: after `downgrade base`, only `alembic_version` is left and `vector` is not in `pg_extension` | No test (2026-11-19) |
 | AC-2.3 | `test_check_alembic` | No test (2026-11-19) |
 | AC-3.1 | `test_missing_postgres_var` (one variable missing, parametrized) and `test_missing_postgres_variables` (all three missing) in `tests/test_db.py`, which call `get_engine()`; `lifespan` calls it first, so the same error stops the app (T4, T5) | Yes (2026-11-23): passes with the `POSTGRES_*` variables unset and set in the shell; the mutation check (dropping the `POSTGRES_DB` check) makes two cases fail |
