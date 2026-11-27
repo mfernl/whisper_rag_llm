@@ -14,7 +14,8 @@ class TestDatabase:
     @pytest.mark.parametrize("missing_var", ["POSTGRES_USERNAME", "POSTGRES_PASSWORD", "POSTGRES_DB"])
     def test_missing_postgres_var(self, missing_var, monkeypatch, envCred):
         """
-        Get engine with any variable missing raises RuntimeError.
+        Spec 002 AC-3.1: get_engine() with any one variable missing raises RuntimeError,
+        and the message names that variable.
         """
         monkeypatch.delenv(name = missing_var, raising = False)
         with pytest.raises(RuntimeError) as rerr:
@@ -23,7 +24,8 @@ class TestDatabase:
     
     def test_missing_postgres_variables(self,monkeypatch, envCred):
         """
-        Get engine without the env variables raises RuntimeError.
+        Spec 002 AC-3.1: get_engine() with all three variables missing raises RuntimeError,
+        and the message names every missing variable (not only the first one).
         """
         for var in ["POSTGRES_USERNAME", "POSTGRES_PASSWORD", "POSTGRES_DB"]:
             monkeypatch.delenv(name = var, raising = False)
@@ -34,7 +36,7 @@ class TestDatabase:
 
     def test_pgEngineSetup(self,pg_engine):
         """
-        After alembic upgrade head, the container has exactly the models.py tables
+        Spec 002 AC-5.1: after alembic upgrade head, the container has exactly the models.py tables
         plus alembic_version (Alembic's own table with the current revision).
         """
         db_tables = set(sqlalchemy.inspect(pg_engine).get_table_names())
@@ -45,6 +47,10 @@ class TestDatabase:
 
 
     def test_realTime_Batch_db(self,db_session,user,rt,btch):
+        """
+        Spec 001 AC-1.1 and AC-1.2: a real-time session and a batch transcription saved
+        for an existing user (the rt and btch fixtures) are returned when queried by their id.
+        """
 
         realTime = db_session.query(RealTimeSession).filter_by(session_id = "articuno#12").first()
         assert realTime.session_id == "articuno#12"
@@ -112,7 +118,11 @@ class TestDatabase:
         assert db_session.query(TranscriptionEmbeddings).count() == 1
 
 
-    def test_rt_session_nonexistentUser(self, db_session):                                                     
+    def test_rt_session_nonexistentUser(self, db_session):
+        """
+        Spec 001 AC-3.1: a real-time session for a username that doesn't exist is rejected
+        by the foreign key (SQLSTATE 23503), not by another integrity error.
+        """
         rtses = RealTimeSession(                                                                                 
             session_id = "rt.session_id",                                                                                              
             username = "manolo"                                                                              
@@ -123,7 +133,11 @@ class TestDatabase:
         assert excinfo.value.orig.sqlstate == "23503"  # foreign_key_violation
         db_session.rollback()  # after a failed commit() the session can't be used until rollback()
 
-    def test_session_joinTransaction(self,db_session, user):                                                     
+    def test_session_joinTransaction(self,db_session, user):
+        """
+        Spec 002 AC-5.1 (test isolation, T7): a failed commit inside a test only rolls back
+        to the savepoint, so the user committed by the fixture is still there afterwards.
+        """
         rtses = RealTimeSession(                                                                                 
             session_id = "rt.session_id",                                                                                              
             username = "manolo"                                                                              
@@ -134,5 +148,33 @@ class TestDatabase:
         db_session.rollback()
         assert db_session.query(User).count() == 1
 
+    def test_duplicated_session_id(self, db_session, rt, user):
+        """
+        Spec 001 AC-1.3: a second real-time session with an existing session_id is rejected.
+        """
+        rtses = RealTimeSession(
+            session_id = rt.session_id,
+            username = user.username
+        )
+        db_session.add(rtses)
+        with pytest.raises(IntegrityError) as excinfo:
+            db_session.commit()
+        assert excinfo.value.orig.sqlstate == "23505"  # unique_violation
+        db_session.rollback()
+
+    def test_duplicated_batch_id(self, db_session, btch, user):
+        """
+        Spec 001 AC-1.3: a second batch transcription with an existing batch_id is rejected.
+        """
+        bt = BatchTranscription(
+            batch_id = btch.batch_id,
+            username = user.username,
+            context = "test duplicate batch_id"
+        )
+        db_session.add(bt)
+        with pytest.raises(IntegrityError) as excinfo:
+            db_session.commit()
+        assert excinfo.value.orig.sqlstate == "23505"  # unique_violation
+        db_session.rollback()
 
 

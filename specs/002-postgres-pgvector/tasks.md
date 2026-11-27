@@ -152,9 +152,15 @@
 ### T9. Test duplicate ids
 - **Closes:** spec 001 G3 (spec 001 AC-1.3).
 - **Depends on:** T7.
-- **Steps:** TODO
-- **Done when:** TODO
-- **Commit:** TODO
+- **Steps:**
+  - Create `test_duplicated_session_id`: save a real-time session with the `session_id` of the `rt` fixture and assert that the commit raises `IntegrityError` with SQLSTATE `23505` (`unique_violation`, `psycopg.errors.UniqueViolation`).
+  - Create `test_duplicated_batch_id`: the same with the `batch_id` of the `btch` fixture. Give it a `context`, so the only possible error is the duplicate (without it, a `NOT NULL` error `23502` would fire instead).
+  - Update spec 001: the AC-1.3 row in section 5 (new tests) and gap G3 (resolved). Also mark G1 resolved and update the AC-1.1 and AC-1.2 rows (left over from T7).
+  - Give every test from T5-T9 a docstring that names the spec and criterion it checks, with a short explanation. From now on, every new test gets one.
+- **Done when:**
+  - With Docker on, `python -m pytest -v tests\test_db.py` passes all the tests (10 passed, 4 skipped for T10).
+  - Mutation check: with a new id (`"other#1"`, `"other#B1"`) instead of the fixture's, both tests fail with `DID NOT RAISE`. The schema comes from the migration (`alembic upgrade head` in `pg_engine`), not from `models.py`, so removing `unique=True` from the model would not change the test database. Checked 2026-11-27.
+- **Commit:** `test(db): reject duplicate session and batch ids`
 
 ### T10. Use real 384-dimension vectors in the embedding tests
 - **Closes:** spec 001 G4.
