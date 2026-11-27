@@ -6,6 +6,9 @@ import re
 from sqlalchemy import text
 from app.models import RealTimeSession, BatchTranscription, TranscriptionEmbeddings, User
 from sqlalchemy.exc import IntegrityError, DataError
+from alembic import command
+from alembic.config import Config
+from pathlib import Path
 
 # A valid value for the Vector(384) column (app/models.py): a plain list of 384 floats.
 # All the values are the same because the tests only check where the embedding comes from.
@@ -174,6 +177,31 @@ class TestDatabase:
         db_session.rollback()
         assert db_session.query(User).count() == 1
 
+    # Red on purpose until T12 (G12: downgrade() does not drop the vector extension yet).
+    # strict=True: when T12 makes it pass, XPASS(strict) turns into a FAIL, which forces
+    # removing this marker in the T12 commit.
+    @pytest.mark.xfail(strict=True, reason="T12: downgrade() does not drop the vector extension yet (G12)")
+    def test_alembic_downgrade(self, pg_engine):
+        """
+        Spec 002 AC-2.2: after alembic downgrade base, only alembic_version is left (no application
+        tables) and the vector extension is gone. The finally runs upgrade head again, so the tests
+        after this one still get the full schema on the shared pg_engine container.
+        """
+        config = Config(Path(__file__).parent.parent / "alembic.ini")
+        try:
+            command.downgrade(config, "base")
+            # A new Inspector after the downgrade: an Inspector caches what it has read.
+            db_tables = set(sqlalchemy.inspect(pg_engine).get_table_names())
+
+            with pg_engine.connect() as conn:
+                result = conn.execute(text("SELECT extname FROM pg_extension WHERE extname = 'vector'")).scalar()
+
+            assert db_tables == {'alembic_version'}
+            assert result is None
+        finally:
+            command.upgrade(config, "head") # Restore the migration to keep running the tests
+
+
     def test_duplicated_session_id(self, db_session, rt, user):
         """
         Spec 001 AC-1.3: a second real-time session with an existing session_id is rejected.
@@ -209,3 +237,5 @@ class TestDatabase:
         with pg_engine.connect() as conn:
             result = conn.execute(text("SELECT extname FROM pg_extension WHERE extname = 'vector'")).scalar()
         assert result is not None
+
+    

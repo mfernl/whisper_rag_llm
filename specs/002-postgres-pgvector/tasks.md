@@ -207,8 +207,8 @@
 - **Depends on:** T14.
 - **Steps:** 
   - Add to `downgrade()` in `alembic/versions/e6edc15da35a_initial_schema.py`: `op.execute("DROP EXTENSION IF EXISTS vector")` (add to the bottom of the method).
-- **Done when:** T14 passes.
-- **Commit:** `alembic(): drop vector extension when downgrade()`
+- **Done when:** the `xfail` marker is removed from `test_alembic_downgrade` and T14 passes (with the marker still there, `strict=True` turns the pass into a FAIL).
+- **Commit:** TODO (Marco: a Conventional Commits type is needed; `alembic():` has none. Which type fits a change that fixes the downgrade behaviour?)
 
 ### T13. `test_alembic_upgrade_extensions`
 - **Closes:** AC-2.1.
@@ -226,10 +226,15 @@
 ### T14. `test_alembic_downgrade`
 - **Closes:** AC-2.2.
 - **Depends on:** T6, T13.
-- **Steps:** TODO
-  > Careful: the session fixture already ran `upgrade head`. If this test downgrades, what happens to the tests that run after it? Options: its own container, or upgrade again at the end. Which one, and why?
-- **Done when:** TODO
-- **Commit:** TODO
+- **Steps:**
+  - `test_alembic_downgrade(pg_engine)` reuses the shared container (option b, not its own container): `command.downgrade(config, "base")` inside a `try`, and `command.upgrade(config, "head")` in the `finally`, so the tests after it still get the full schema even if an assert fails. It is cheaper than a second container, and upgrade → downgrade → upgrade also proves the migration can be applied again.
+  - It is safe for the dev database: `alembic/env.py` takes the URL from `get_engine()`, which `pg_engine` points at the container.
+  - Two asserts, one per half of AC-2.2, so the failure names the half that broke: the tables are exactly `{'alembic_version'}` (a new `inspect()` after the downgrade, because an Inspector caches), and the `pg_extension` query for `vector` returns `None`.
+  - Red on purpose until T12: `@pytest.mark.xfail(strict=True, reason="T12: ...")`, so the suite stays green and T12 has to remove the marker (an XPASS with `strict=True` is a FAIL). See https://docs.pytest.org/en/stable/how-to/skipping.html#strict-parameter
+- **Done when:**
+  - Without the marker, the test FAILS on the extension assert only (`'vector' is None`), and the tables assert passes (checked 2026-11-27).
+  - With the marker, `python -m pytest -v tests\test_db.py`: 16 passed, 1 xfailed, and the tests that run after it in the file (`test_duplicated_*`) pass (checked 2026-11-27).
+- **Commit:** `test(db): check that downgrade base drops the schema and the vector extension`
 
 ### T15. `test_check_alembic`
 - **Closes:** AC-2.3.
