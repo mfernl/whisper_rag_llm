@@ -4,11 +4,13 @@ import sqlalchemy
 from app.database import get_engine
 import re
 from app.models import RealTimeSession, BatchTranscription, TranscriptionEmbeddings, User
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, DataError
+
+# A valid value for the Vector(384) column (app/models.py): a plain list of 384 floats.
+# All the values are the same because the tests only check where the embedding comes from.
+VECTOR_384 = [0.1] * 384
 
 
-
-        
 class TestDatabase:
 
     @pytest.mark.parametrize("missing_var", ["POSTGRES_USERNAME", "POSTGRES_PASSWORD", "POSTGRES_DB"])
@@ -60,63 +62,84 @@ class TestDatabase:
         assert batch.batch_id == "articuno#B1"
         assert batch.username == "articuno"
 
-    @pytest.mark.skip(reason="T10: use real vectors")
-    def test_embedding_two_transcriptions(self,db_session,user,rt,btch):
-        ses = db_session.query(RealTimeSession).filter_by(session_id = "articuno#12").first()
-        batch = db_session.query(BatchTranscription).filter_by(batch_id = "articuno#B1").first()
-
+    def test_embedding_two_transcriptions(self, db_session, rt, btch):
+        """
+        Spec 001 AC-2.1: an embedding with both a session_id and a batch_id is rejected
+        by the check_one_source CHECK constraint (SQLSTATE 23514), not by another error.
+        """
         emb = TranscriptionEmbeddings(
-            session_id = ses.session_id, 
-            batch_id = batch.batch_id, 
-            embedding = "asdfg", 
-            start_time = 12, 
-            end_time = 13, 
-            text = "ayer fui a por manzanas")
-        
+            session_id = rt.session_id,
+            batch_id = btch.batch_id,
+            embedding = VECTOR_384,
+            start_time = 12,
+            end_time = 13,
+            text = "yesterday I went to buy apples")
         db_session.add(emb)
-        with pytest.raises(IntegrityError):
+        with pytest.raises(IntegrityError) as excinfo:
             db_session.commit()
-        db_session.rollback()
+        assert excinfo.value.orig.sqlstate == "23514"  # check_violation
+        assert excinfo.value.orig.diag.constraint_name == "check_one_source"
 
-    @pytest.mark.skip(reason="T10: use real vectors")
-    def test_embedding_no_transcriptions(self,db_session):
+    def test_embedding_no_transcriptions(self, db_session):
+        """
+        Spec 001 AC-2.2: an embedding with neither a session_id nor a batch_id is rejected
+        by the check_one_source CHECK constraint (SQLSTATE 23514).
+        """
         emb = TranscriptionEmbeddings(
-            embedding = "asdfg", 
-            start_time = 12, 
-            end_time = 13, 
-            text = "hoy a por melocotones")
-        
+            embedding = VECTOR_384,
+            start_time = 12,
+            end_time = 13,
+            text = "today I am going to buy peaches")
         db_session.add(emb)
-        with pytest.raises(IntegrityError):
+        with pytest.raises(IntegrityError) as excinfo:
             db_session.commit()
-        db_session.rollback()
+        assert excinfo.value.orig.sqlstate == "23514"  # check_violation
+        assert excinfo.value.orig.diag.constraint_name == "check_one_source"
 
-    @pytest.mark.skip(reason="T10: use real vectors")
-    def test_only_batch_accepted(self, db_session, user, btch):
+    def test_only_batch_accepted(self, db_session, btch):
+        """
+        Spec 001 AC-2.3: an embedding with only a batch_id is stored.
+        """
         emb = TranscriptionEmbeddings(
-            batch_id = btch.batch_id,  
-            embedding = "asdfg", 
-            start_time = 12, 
-            end_time = 13, 
-            text = "maniana a por platanos")
-        
+            batch_id = btch.batch_id,
+            embedding = VECTOR_384,
+            start_time = 12,
+            end_time = 13,
+            text = "tomorrow I am going to buy bananas")
         db_session.add(emb)
-        db_session.commit()                 # si falla, el test falla
+        db_session.commit()                 # if the insert is rejected, this raises and the test fails
         assert db_session.query(TranscriptionEmbeddings).count() == 1
 
-    @pytest.mark.skip(reason="T10: use real vectors")
-    def test_only_session_accepted(self, db_session, user, rt):
+    def test_only_session_accepted(self, db_session, rt):
+        """
+        Spec 001 AC-2.4: an embedding with only a session_id is stored.
+        """
         emb = TranscriptionEmbeddings(
-            session_id = rt.session_id,  
-            embedding = "asdfg", 
-            start_time = 12, 
-            end_time = 13, 
-            text = "y pasado a por peras")
-        
+            session_id = rt.session_id,
+            embedding = VECTOR_384,
+            start_time = 12,
+            end_time = 13,
+            text = "and the day after I am going to buy pears")
         db_session.add(emb)
-        db_session.commit()                 # si falla, el test falla
+        db_session.commit()                 # if the insert is rejected, this raises and the test fails
         assert db_session.query(TranscriptionEmbeddings).count() == 1
 
+    def test_embedding_wrongDimension(self, db_session, btch):
+        """
+        Spec 001 AC-2.5: an embedding whose length is not 384 is rejected by pgvector
+        (DataError, SQLSTATE 22000), even when its source is valid.
+        """
+        emb = TranscriptionEmbeddings(
+            batch_id = btch.batch_id,
+            embedding = [0.1] * 3,
+            start_time = 12,
+            end_time = 13,
+            text = "a vector that is too short")
+        db_session.add(emb)
+        with pytest.raises(DataError) as excinfo:
+            db_session.commit()
+        assert excinfo.value.orig.sqlstate == "22000"  # data_exception
+        assert "expected 384 dimensions" in str(excinfo.value.orig)
 
     def test_rt_session_nonexistentUser(self, db_session):
         """
@@ -131,7 +154,6 @@ class TestDatabase:
         with pytest.raises(IntegrityError) as excinfo:                                                    
             db_session.commit()
         assert excinfo.value.orig.sqlstate == "23503"  # foreign_key_violation
-        db_session.rollback()  # after a failed commit() the session can't be used until rollback()
 
     def test_session_joinTransaction(self,db_session, user):
         """
@@ -145,6 +167,8 @@ class TestDatabase:
         db_session.add(rtses)                                                                                                                        
         with pytest.raises(IntegrityError) as excinfo:                                                    
             db_session.commit()                                                                                                                 
+        # After a failed commit() the session can't run queries until rollback(). Here it is
+        # needed because the test uses the session again; the other tests leave it to the fixture.
         db_session.rollback()
         assert db_session.query(User).count() == 1
 
@@ -160,7 +184,6 @@ class TestDatabase:
         with pytest.raises(IntegrityError) as excinfo:
             db_session.commit()
         assert excinfo.value.orig.sqlstate == "23505"  # unique_violation
-        db_session.rollback()
 
     def test_duplicated_batch_id(self, db_session, btch, user):
         """
@@ -175,6 +198,5 @@ class TestDatabase:
         with pytest.raises(IntegrityError) as excinfo:
             db_session.commit()
         assert excinfo.value.orig.sqlstate == "23505"  # unique_violation
-        db_session.rollback()
 
 

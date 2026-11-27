@@ -165,10 +165,23 @@
 ### T10. Use real 384-dimension vectors in the embedding tests
 - **Closes:** spec 001 G4.
 - **Depends on:** T7.
-- **Steps:** TODO
-  > Guiding question: should there also be a test that a vector of the wrong length is rejected? Which criterion would it check?
-- **Done when:** TODO
-- **Commit:** TODO
+- **Steps:**
+  - Add a module-level constant `VECTOR_384 = [0.1] * 384` in `tests/test_db.py`: a plain Python list is a valid value for `Vector(384)` ([pgvector-python, SQLAlchemy](https://github.com/pgvector/pgvector-python#sqlalchemy)). The column is already declared in `app/models.py`; the tests only pass a value.
+  - Use it in the four embedding tests (spec 001 AC-2.1 to AC-2.4) and remove their `skip` markers. Use the `rt` and `btch` fixtures directly instead of querying them again.
+  - In the two "rejected" tests, assert SQLSTATE `23514` (`check_violation`) and `diag.constraint_name == "check_one_source"`. With `"asdfg"`, pgvector-python raised `StatementError` before the query reached Postgres, so the old tests never tested the CHECK constraint.
+  - Add spec 001 AC-2.5 (wrong length rejected) and `test_embedding_wrongDimension`: pgvector raises `DataError`, SQLSTATE `22000` (`data_exception`), message `expected 384 dimensions, not 3`. It is a `DataError`, not an `IntegrityError`.
+  - Remove `db_session.rollback()` from tests that don't use the session after the failed commit: the `db_session` fixture closes the session and rolls back the outer transaction. Keep it in `test_session_joinTransaction`, which queries afterwards. (This changes the T8 step "keep `db_session.rollback()`".)
+  - Translate the test texts and the comment `# si falla, el test falla` to English (constitution section 4).
+  - Docstrings with spec and criterion (constitution section 3, v3.4.0). Update spec 001: AC-2.5, the AC-2.x rows in section 5, and G4 (resolved).
+- **Done when:**
+  - With Docker on, `python -m pytest -v -rs tests	est_db.py`: 15 passed, 0 skipped.
+  - Mutation checks (checked 2026-11-27), each one goes red:
+    - AC-2.1 with `text=None`: `assert '23502' == '23514'` (another integrity error doesn't make it pass).
+    - AC-2.2 with a `batch_id`: `DID NOT RAISE IntegrityError`.
+    - AC-2.3 with a vector of length 3: `DataError` on commit.
+    - AC-2.4 with the `session_id` of a session that doesn't exist: `IntegrityError` (foreign key) on commit.
+    - AC-2.5 with `VECTOR_384`: `DID NOT RAISE DataError`.
+- **Commit:** `test(db): use real 384-dimension vectors in the embedding tests`
 
 ## Block D: the migration (R2)
 

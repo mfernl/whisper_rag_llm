@@ -80,6 +80,7 @@ This phase only defines the tables and their rules. Writing to them from the end
 - **AC-2.2** IF an embedding is saved with neither `session_id` nor `batch_id`, THEN THE SYSTEM SHALL reject it.
 - **AC-2.3** WHEN an embedding is saved with only a `batch_id`, THE SYSTEM SHALL store it.
 - **AC-2.4** WHEN an embedding is saved with only a `session_id`, THE SYSTEM SHALL store it.
+- **AC-2.5** IF an embedding is saved with a vector whose length is not 384 (the dimension fixed in constitution section 1), THEN THE SYSTEM SHALL reject it. *(Added 2026-11-27, spec 002 T10.)*
 
 ### R3. Every session and batch belongs to an existing user
 **As** an admin, **I want** every session and batch to belong to a registered user, **so that** ownership (constitution section 5) can always be checked and there is no data without an owner.
@@ -93,10 +94,11 @@ This phase only defines the tables and their rules. Writing to them from the end
 | AC-1.1 | `test_realTime_Batch_db` | Passes on Postgres (G1 resolved, spec 002 T7) |
 | AC-1.2 | `test_realTime_Batch_db` | Passes on Postgres (G1 resolved, spec 002 T7) |
 | AC-1.3 | `test_duplicated_session_id`, `test_duplicated_batch_id` | Passes on Postgres (G3 resolved, spec 002 T9) |
-| AC-2.1 | `test_embedding_two_transcriptions` | Not runnable (G1) |
-| AC-2.2 | `test_embedding_no_transcriptions` | Not runnable (G1) |
-| AC-2.3 | `test_only_batch_accepted` | Not runnable (G1) |
-| AC-2.4 | `test_only_session_accepted` | Not runnable (G1) |
+| AC-2.1 | `test_embedding_two_transcriptions` | Passes on Postgres (G4 resolved, spec 002 T10) |
+| AC-2.2 | `test_embedding_no_transcriptions` | Passes on Postgres (G4 resolved, spec 002 T10) |
+| AC-2.3 | `test_only_batch_accepted` | Passes on Postgres (G4 resolved, spec 002 T10) |
+| AC-2.4 | `test_only_session_accepted` | Passes on Postgres (G4 resolved, spec 002 T10) |
+| AC-2.5 | `test_embedding_wrongDimension` | Passes on Postgres (spec 002 T10) |
 | AC-3.1 | `test_rt_session_nonexistentUser` | Passes on Postgres (G2 resolved, spec 002 T8) |
 
 ## 6. Known gaps
@@ -108,6 +110,7 @@ This phase only defines the tables and their rules. Writing to them from the end
 - **G3. AC-1.3 (duplicate ids) has no test.** → `002-postgres-pgvector`.
   **Resolved 2026-11-27 (spec 002 T9):** `test_duplicated_session_id` and `test_duplicated_batch_id` save a second row with the id of an existing one and assert SQLSTATE `23505` (`unique_violation`).
 - **G4. The embedding tests use `"asdfg"` as the embedding.** That isn't a 384-dimension vector, and pgvector will reject it. → `002-postgres-pgvector`: use a valid vector of length 384.
+  **Resolved 2026-11-27 (spec 002 T10):** the tests use `VECTOR_384` (a list of 384 floats). With `"asdfg"` they never reached the database: pgvector-python raised `StatementError` (`expected list or ndarray`), so the two "rejected" tests didn't test the CHECK constraint. They now assert SQLSTATE `23514` and the constraint name `check_one_source`.
 
 ## 7. Open questions
 
