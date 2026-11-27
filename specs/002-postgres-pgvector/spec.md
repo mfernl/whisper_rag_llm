@@ -47,7 +47,7 @@ The schema is managed with Alembic migrations instead of `Base.metadata.create_a
 
 ### 3.3 Schema migrations
 - **Tool:** Alembic. `alembic/env.py` takes the URL from `pg_uri` and the target schema from `Base.metadata`.
-- **Current revision(s):** one, `e6edc15da35a` ("esquema inicial"; its message is in Spanish, see G11). It is the first migration (`down_revision = None`) and the current head.
+- **Current revision(s):** one, `e6edc15da35a` ("initial schema", file `e6edc15da35a_initial_schema.py`; renamed from Spanish in T11, see G11). It is the first migration (`down_revision = None`) and the current head.
 - **Who creates the `vector` extension:** the migration itself. The first line of `upgrade()` runs `CREATE EXTENSION IF NOT EXISTS vector`, so an empty database gets the extension from `alembic upgrade head`, not from the app.
 - **How the schema is applied:** by hand. The developer runs `alembic upgrade head` inside the API container. Nothing runs it automatically.
 

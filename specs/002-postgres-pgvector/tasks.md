@@ -189,19 +189,26 @@
 
 ### T11. Rename the first migration to English
 - **Closes:** G11.
-- **Depends on:** TODO
-- **Steps:** TODO
-  > Only the filename and the message change. The `revision` id `e6edc15da35a` must not change. Why? (What does the `alembic_version` table store?)
-- **Done when:** `alembic history` shows TODO, and `alembic current` on the existing local database still shows `e6edc15da35a`.
-- **Commit:** TODO
+- **Depends on:** nothing.
+- **Steps:**
+  - `git mv` the file from `e6edc15da35a_esquema_inicial.py` to `e6edc15da35a_initial_schema.py` (lowercase, like the slug Alembic generates from the message).
+  - Change the first line of its docstring (the message) from `esquema inicial` to `initial schema`.
+  - Leave `revision = 'e6edc15da35a'` alone: `alembic_version` stores only that id, and Alembic finds the script by the `revision` variable, not by the filename.
+  - Delete `alembic/versions/__pycache__` so no stale `.pyc` of the old name is left.
+  - Update the references that describe the current state (spec 002 section 3.3, CLAUDE.md section 2). The gap G11 and Q5 text stays as history.
+- **Done when:**
+  - `alembic history` shows `<base> -> e6edc15da35a (head), initial schema`.
+  - `alembic current` on the existing local database still shows `e6edc15da35a (head)`.
+  - `python -m pytest -v tests\test_db.py` still gives 15 passed (the fixture runs `upgrade head` with the renamed file).
+- **Commit:** `refactor(alembic): rename the first migration to English`
 
 ### T12. Drop the `vector` extension in `downgrade()`
 - **Closes:** G12.
-- **Depends on:** TODO
-- **Steps:** TODO
-  > Guiding question: in which position inside `downgrade()`? Can you drop the extension while a `Vector` column still exists?
+- **Depends on:** T14.
+- **Steps:** 
+  - Add to `downgrade()` in alembic `Initial_Schema`: `op.execute("DROP EXTENSION IF EXISTS vector")` (add to the bottom of the method).
 - **Done when:** T14 passes.
-- **Commit:** TODO
+- **Commit:** `alembic(): drop vector extension when downgrade()`
 
 ### T13. `test_alembic_upgrade`
 - **Closes:** AC-2.1.
@@ -213,7 +220,7 @@
 
 ### T14. `test_alembic_downgrade`
 - **Closes:** AC-2.2.
-- **Depends on:** T6, TODO
+- **Depends on:** T6, T13.
 - **Steps:** TODO
   > Careful: the session fixture already ran `upgrade head`. If this test downgrades, what happens to the tests that run after it? Options: its own container, or upgrade again at the end. Which one, and why?
 - **Done when:** TODO

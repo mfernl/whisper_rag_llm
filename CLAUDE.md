@@ -31,7 +31,7 @@
 
 - Detailed context from earlier sessions is in `instrucciones.txt` (ignored by git and **out of date**: it says Phase 2 hasn't started). `razonamiento.md` explains why SQLAlchemy is kept, and `chuleta_comandos_rag_llm.md` is the command cheat sheet (both ignored by git, in Spanish).
 - **Phase 1 (data model and tests): closed.** Models `RealTimeSession`, `BatchTranscription` and `TranscriptionEmbeddings`, with the `check_one_source` `CheckConstraint`. There are 6 tests in `tests/test_db.py` against in-memory SQLite (they can't run today: see gap G1 in `specs/001-data-model/spec.md`). Spec: `specs/001-data-model/spec.md`.
-- **Phase 2 (Postgres + pgvector + Alembic): almost closed.** Last Phase 2 code commit: `75c39fe`. The `db` service is in compose with a volume and healthcheck, `pg_uri` reads the `.env`, the column is `Vector(384)` and the migration `alembic/versions/e6edc15da35a_esquema_inicial.py` exists. `create_all` and `CREATE EXTENSION` are commented out in `main.py`.
+- **Phase 2 (Postgres + pgvector + Alembic): almost closed.** Last Phase 2 code commit: `75c39fe`. The `db` service is in compose with a volume and healthcheck, `pg_uri` reads the `.env`, the column is `Vector(384)` and the migration `alembic/versions/e6edc15da35a_initial_schema.py` exists (renamed from `esquema_inicial` in spec 002 T11). `create_all` and `CREATE EXTENSION` are commented out in `main.py`.
   Pending (with guiding questions, without giving the solution):
   1. Is the migration applied? Check with `alembic current`, and with `\dt` and `\dx` in psql.
   2. With an empty DB (after `down -v`), who creates the `vector` extension? Does the migration create it?
