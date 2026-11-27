@@ -1,5 +1,5 @@
 # Constitution — whisper_rag_llm
-Version: 3.3.0 · Date: 2026-11-20
+Version: 3.4.0 · Date: 2026-11-27
 
 ## 1. Fixed stack
 Changing any of these elements requires opening a decision record (ADR) in `docs/decisions/`.
@@ -30,6 +30,7 @@ Exact versions are pinned in `requirements.txt` (and torch also in the `Dockerfi
   - A skipped test counts as green only if it carries a reason (reviewed with `pytest -rs`).
   - If the integration tests do not run because Docker is unavailable, the suite does NOT count as green.
 - Every acceptance criterion (EARS) has at least one test that checks it.
+  - Every test has a docstring that starts with the spec and criterion it checks (e.g. `Spec 001 AC-1.3: ...`), followed by a short explanation of what it proves. A test that checks no criterion (e.g. a fixture test) says which task or requirement it supports.
 - Work follows TDD cycles (red → green → refactor), starting with the tests for each EARS criterion. Beyond those tests, the developer decides when to stop iterating.
 - Integration tests run with pytest + testcontainers-python, locally and in CI, with Python 3.11 and the image `pgvector/pgvector:0.8.7-pg18-bookworm`.
 - Once CI exists (Phase 4), a pull request can be merged into `main` only when the CI run on it is green.
