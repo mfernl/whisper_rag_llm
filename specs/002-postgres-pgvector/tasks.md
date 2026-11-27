@@ -185,7 +185,7 @@
 
 ## Block D: the migration (R2)
 
-> Order question: do T11-T12 before or after the tests in T13-T15? Test first (constitution section 3) says TODO.
+> Order (decided 2026-11-27): T11 → T13 → T14 → T12 → T15. T11 changes no behaviour, so it needs no test first. T12 does change behaviour, so by test first (constitution section 3) T14 is written first and fails, and T12 makes it pass.
 
 ### T11. Rename the first migration to English
 - **Closes:** G11.
@@ -206,7 +206,7 @@
 - **Closes:** G12.
 - **Depends on:** T14.
 - **Steps:** 
-  - Add to `downgrade()` in alembic `Initial_Schema`: `op.execute("DROP EXTENSION IF EXISTS vector")` (add to the bottom of the method).
+  - Add to `downgrade()` in `alembic/versions/e6edc15da35a_initial_schema.py`: `op.execute("DROP EXTENSION IF EXISTS vector")` (add to the bottom of the method).
 - **Done when:** T14 passes.
 - **Commit:** `alembic(): drop vector extension when downgrade()`
 
